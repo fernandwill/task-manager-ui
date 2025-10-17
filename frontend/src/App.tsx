@@ -1,17 +1,11 @@
-import Brightness4Icon from '@mui/icons-material/Brightness4';
-import Brightness7Icon from '@mui/icons-material/Brightness7';
-import DownloadIcon from '@mui/icons-material/Download';
 import {
   Alert,
-  AppBar,
   Box,
   Chip,
   CircularProgress,
   Container,
-  IconButton,
   Paper,
   Stack,
-  Toolbar,
   Typography,
   alpha,
   useTheme,
@@ -21,11 +15,9 @@ import ReportDownloadButton from './components/ReportDownloadButton';
 import TaskForm from './components/TaskForm';
 import TaskList from './components/TaskList';
 import { useTasksStore } from './store/tasksStore';
-import { useColorMode } from './theme/AppThemeProvider';
 
 const App = () => {
   const theme = useTheme();
-  const { mode, toggleMode } = useColorMode();
   const tasks = useTasksStore((state) => state.tasks);
   const isLoading = useTasksStore((state) => state.isLoading);
   const error = useTasksStore((state) => state.error);
@@ -77,38 +69,6 @@ const App = () => {
     >
       <Container maxWidth="lg">
         <Stack spacing={5}>
-          <AppBar
-            position="static"
-            color="transparent"
-            elevation={0}
-            sx={{
-              backgroundColor: alpha(theme.palette.background.paper, 0.9),
-              backdropFilter: 'blur(8px)',
-              border: `1px solid ${alpha(theme.palette.divider, 0.3)}`,
-            }}
-          >
-            <Toolbar sx={{ justifyContent: 'space-between', gap: 2 }}>
-              <Box>
-                <Typography variant="h5" fontWeight={600}>
-                  Task Manager
-                </Typography>
-                <Typography variant="body2" color="text.secondary">
-                  Plan, track, and close your work in one place.
-                </Typography>
-              </Box>
-              <Stack direction="row" spacing={1.5} alignItems="center">
-                <IconButton
-                  color="inherit"
-                  onClick={toggleMode}
-                  aria-label="Toggle theme"
-                >
-                  {mode === 'dark' ? <Brightness7Icon /> : <Brightness4Icon />}
-                </IconButton>
-                <ReportDownloadButton tasks={tasks} />
-              </Stack>
-            </Toolbar>
-          </AppBar>
-
           <Box
             sx={{
               display: 'grid',
@@ -192,19 +152,7 @@ const App = () => {
                     : 'No tasks yet. Start by adding your first task.'}
                 </Typography>
               </Box>
-              <Chip
-                icon={<DownloadIcon fontSize="small" />}
-                label="Download Report"
-                color="primary"
-                variant="outlined"
-                onClick={() => {
-                  const button = document.querySelector<HTMLButtonElement>(
-                    '[data-testid="report-download-button"]',
-                  );
-                  button?.click();
-                }}
-                sx={{ cursor: 'pointer' }}
-              />
+              <ReportDownloadButton tasks={tasks} />
             </Stack>
 
             {isLoading && !tasks.length ? (
