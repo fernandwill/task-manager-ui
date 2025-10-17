@@ -2,7 +2,6 @@ import {
   Alert,
   Box,
   Button,
-  Chip,
   CircularProgress,
   Container,
   Paper,
@@ -102,12 +101,6 @@ const App = () => {
   const gradientAmbient = isLight
     ? alpha(theme.palette.text.primary, 0.03)
     : alpha(theme.palette.common.white, 0.04);
-
-  const statChips = [
-    { label: 'Total', value: stats.total },
-    { label: 'Completed', value: stats.completed },
-    { label: 'In progress', value: stats.inProgress },
-  ].filter((chip) => chip.value > 0);
 
   return (
     <Box
@@ -213,27 +206,17 @@ const App = () => {
                 Streamline tasks in a focused workspace with muted tones and
                 zero distractions.
               </Typography>
-              <Stack
-                direction={{ xs: 'column', md: 'row' }}
-                spacing={3}
-                alignItems={{ md: 'center' }}
-                justifyContent="space-between"
+              <Box
+                sx={{
+                  display: 'flex',
+                  justifyContent: { xs: 'center', md: 'flex-end' },
+                }}
               >
-                <Stack direction="row" spacing={1} flexWrap="wrap">
-                  {statChips.map((chip) => (
-                    <Chip
-                      key={chip.label}
-                      label={`${chip.value} ${chip.label}`}
-                      variant="outlined"
-                      sx={{ borderColor: borderStrong }}
-                    />
-                  ))}
-                </Stack>
                 <TaskStatusPieChart
                   completed={stats.completed}
                   inProgress={stats.inProgress}
                 />
-              </Stack>
+              </Box>
             </Paper>
             <Paper
               elevation={0}
