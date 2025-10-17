@@ -137,7 +137,7 @@ const TaskList = ({
             primaryTypographyProps={{
               sx:
                 variant === 'completed'
-                  ? { textDecoration: 'line-through', color: 'text.disabled' }
+                  ? { color: 'text.secondary' }
                   : undefined,
             }}
           />
@@ -171,7 +171,7 @@ const TaskList = ({
             ) : (
               <Chip
                 size="small"
-                label="Completed"
+                label="COMPLETED"
                 sx={{
                   borderColor,
                   color: isLight
@@ -181,6 +181,7 @@ const TaskList = ({
                     theme.palette.text.primary,
                     isLight ? 0.04 : 0.12,
                   ),
+                  flexShrink: 0,
                 }}
                 variant="outlined"
               />
