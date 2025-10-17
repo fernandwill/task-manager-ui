@@ -14,34 +14,45 @@ const initialFormState = {
 
 const TaskForm = ({ onSubmit, isSubmitting = false }: TaskFormProps) => {
   const [formState, setFormState] = useState(initialFormState);
+  const [titleError, setTitleError] = useState<string | null>(null);
 
   const handleSubmit = (event: FormEvent<HTMLFormElement>) => {
     event.preventDefault();
-    if (!formState.title.trim()) {
+    const trimmedTitle = formState.title.trim();
+    if (!trimmedTitle) {
+      setTitleError('Title is required');
       return;
     }
 
     onSubmit({
-      title: formState.title.trim(),
+      title: trimmedTitle,
       description: formState.description.trim() || undefined,
     });
     setFormState(initialFormState);
+    setTitleError(null);
   };
 
   return (
     <Box
       component="form"
+      noValidate
       onSubmit={handleSubmit}
       sx={{ display: 'flex', flexDirection: 'column', gap: 2.5 }}
     >
       <TextField
         label="Task title"
         value={formState.title}
-        onChange={(event) =>
-          setFormState((prev) => ({ ...prev, title: event.target.value }))
-        }
+        onChange={(event) => {
+          const { value } = event.target;
+          setFormState((prev) => ({ ...prev, title: value }));
+          if (titleError && value.trim()) {
+            setTitleError(null);
+          }
+        }}
         placeholder="e.g. Prepare sprint demo"
         required
+        error={Boolean(titleError)}
+        helperText={titleError ?? undefined}
       />
       <TextField
         label="Description"
