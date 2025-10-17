@@ -121,8 +121,10 @@ describe('App', () => {
     expect(store.mocks.fetchTasksMock).toHaveBeenCalledTimes(1);
     expect(screen.getByText(/Plan sprint/i)).toBeInTheDocument();
 
-    const checkbox = screen.getByRole('checkbox', { name: /Plan sprint/i });
-    await user.click(checkbox);
+    const markDoneButton = screen.getByRole('button', {
+      name: /mark plan sprint as done/i,
+    });
+    await user.click(markDoneButton);
 
     expect(store.mocks.toggleTaskCompletionMock).toHaveBeenCalledWith(1);
   });

@@ -1,12 +1,13 @@
 import AssignmentTurnedInIcon from '@mui/icons-material/AssignmentTurnedIn';
 import {
   Box,
-  Checkbox,
+  Button,
+  Chip,
   IconButton,
   List,
   ListItem,
-  ListItemSecondaryAction,
   ListItemText,
+  Stack,
   Typography,
   alpha,
   useTheme,
@@ -18,9 +19,10 @@ interface TaskListProps {
   tasks: Task[];
   onToggle: (taskId: number) => void;
   onDelete: (taskId: number) => void;
+  variant: 'inProgress' | 'completed';
 }
 
-const TaskList = ({ tasks, onToggle, onDelete }: TaskListProps) => {
+const TaskList = ({ tasks, onToggle, onDelete, variant }: TaskListProps) => {
   const theme = useTheme();
   const isLight = theme.palette.mode === 'light';
   const surfaceColor = isLight
@@ -37,6 +39,7 @@ const TaskList = ({ tasks, onToggle, onDelete }: TaskListProps) => {
     : alpha(theme.palette.common.white, 0.48);
 
   if (!tasks.length) {
+    const isInProgress = variant === 'inProgress';
     return (
       <Box
         sx={{
@@ -52,10 +55,12 @@ const TaskList = ({ tasks, onToggle, onDelete }: TaskListProps) => {
       >
         <AssignmentTurnedInIcon sx={{ fontSize: 48, color: mutedIcon }} />
         <Typography variant="h6" fontWeight={500}>
-          You’re all caught up
+          {isInProgress ? 'You’re all caught up' : 'Nothing completed yet'}
         </Typography>
         <Typography variant="body2">
-          Add a task to kick off your next milestone.
+          {isInProgress
+            ? 'Add a task to kick off your next milestone.'
+            : 'Complete tasks to see them tracked here.'}
         </Typography>
       </Box>
     );
@@ -76,55 +81,79 @@ const TaskList = ({ tasks, onToggle, onDelete }: TaskListProps) => {
             backgroundColor: surfaceColor,
             backdropFilter: 'blur(8px)',
             transition: 'all 0.2s ease',
+            display: 'flex',
+            alignItems: 'center',
             '&:hover': {
               borderColor: borderColorHover,
               transform: 'translateY(-1px)',
             },
           }}
-          secondaryAction={
-            <ListItemSecondaryAction>
-              <IconButton
-                edge="end"
-                aria-label={`delete ${task.title}`}
-                onClick={() => onDelete(task.id)}
-                sx={{
-                  color: mutedIcon,
-                  '&:hover': {
-                    color: isLight
-                      ? 'rgba(17, 17, 24, 0.56)'
-                      : alpha(theme.palette.common.white, 0.72),
-                  },
-                }}
-              >
-                <DeleteIcon />
-              </IconButton>
-            </ListItemSecondaryAction>
-          }
         >
-          <Checkbox
-            edge="start"
-            color="default"
-            checked={task.completed}
-            onChange={() => onToggle(task.id)}
-            tabIndex={-1}
-            inputProps={{ 'aria-labelledby': `task-${task.id}` }}
-            sx={{
-              color: mutedIcon,
-              '&.Mui-checked': {
-                color: theme.palette.primary.main,
-              },
-            }}
-          />
           <ListItemText
             id={`task-${task.id}`}
             primary={task.title}
             secondary={task.description}
             primaryTypographyProps={{
-              sx: task.completed
-                ? { textDecoration: 'line-through', color: 'text.disabled' }
-                : undefined,
+              sx:
+                variant === 'completed'
+                  ? { textDecoration: 'line-through', color: 'text.disabled' }
+                  : undefined,
             }}
           />
+          <Stack direction="row" spacing={1.5} alignItems="center">
+            {variant === 'inProgress' ? (
+              <Button
+                size="small"
+                variant="outlined"
+                onClick={() => onToggle(task.id)}
+                aria-label={`Mark ${task.title} as done`}
+                sx={{
+                  borderColor: borderColor,
+                  color: theme.palette.text.primary,
+                  '&:hover': {
+                    borderColor: theme.palette.primary.main,
+                    backgroundColor: alpha(
+                      theme.palette.primary.main,
+                      isLight ? 0.08 : 0.16,
+                    ),
+                  },
+                }}
+              >
+                Mark as Done
+              </Button>
+            ) : (
+              <Chip
+                size="small"
+                label="Completed"
+                sx={{
+                  borderColor,
+                  color: isLight
+                    ? 'rgba(17, 17, 24, 0.56)'
+                    : alpha(theme.palette.common.white, 0.72),
+                  backgroundColor: alpha(
+                    theme.palette.text.primary,
+                    isLight ? 0.04 : 0.12,
+                  ),
+                }}
+                variant="outlined"
+              />
+            )}
+            <IconButton
+              edge="end"
+              aria-label={`delete ${task.title}`}
+              onClick={() => onDelete(task.id)}
+              sx={{
+                color: mutedIcon,
+                '&:hover': {
+                  color: isLight
+                    ? 'rgba(17, 17, 24, 0.56)'
+                    : alpha(theme.palette.common.white, 0.72),
+                },
+              }}
+            >
+              <DeleteIcon />
+            </IconButton>
+          </Stack>
         </ListItem>
       ))}
     </List>
