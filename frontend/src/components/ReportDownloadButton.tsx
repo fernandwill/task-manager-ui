@@ -1,4 +1,5 @@
 import { useState } from 'react';
+import PictureAsPdfIcon from '@mui/icons-material/PictureAsPdf';
 import { Button } from '@mui/material';
 import { Document, Page, Text, View, pdf } from '@react-pdf/renderer';
 import dayjs from 'dayjs';
@@ -59,12 +60,16 @@ const ReportDownloadButton = ({ tasks }: ReportDownloadButtonProps) => {
 
   return (
     <Button
-      variant="outlined"
+      variant="contained"
+      color="primary"
+      size="large"
+      startIcon={<PictureAsPdfIcon />}
       onClick={handleDownload}
       disabled={isGenerating}
-      sx={{ mt: 3 }}
+      data-testid="report-download-button"
+      sx={{ boxShadow: 'none', fontWeight: 600 }}
     >
-      {isGenerating ? 'Preparing report…' : 'Download Report'}
+      {isGenerating ? 'Preparing report…' : 'Download PDF'}
     </Button>
   );
 };

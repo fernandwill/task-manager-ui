@@ -1,4 +1,5 @@
-import { FormEvent, useState } from 'react';
+import { useState } from 'react';
+import type { FormEvent } from 'react';
 import { Box, Button, TextField } from '@mui/material';
 
 interface TaskFormProps {
@@ -31,7 +32,7 @@ const TaskForm = ({ onSubmit, isSubmitting = false }: TaskFormProps) => {
     <Box
       component="form"
       onSubmit={handleSubmit}
-      sx={{ display: 'flex', flexDirection: 'column', gap: 2, mt: 3 }}
+      sx={{ display: 'flex', flexDirection: 'column', gap: 2.5 }}
     >
       <TextField
         label="Task title"
@@ -39,6 +40,7 @@ const TaskForm = ({ onSubmit, isSubmitting = false }: TaskFormProps) => {
         onChange={(event) =>
           setFormState((prev) => ({ ...prev, title: event.target.value }))
         }
+        placeholder="e.g. Prepare sprint demo"
         required
       />
       <TextField
@@ -49,8 +51,14 @@ const TaskForm = ({ onSubmit, isSubmitting = false }: TaskFormProps) => {
         }
         multiline
         minRows={3}
+        placeholder="Add context, resources, or acceptance criteria"
       />
-      <Button type="submit" variant="contained" disabled={isSubmitting}>
+      <Button
+        type="submit"
+        variant="contained"
+        size="large"
+        disabled={isSubmitting}
+      >
         Create Task
       </Button>
     </Box>

@@ -1,4 +1,4 @@
-import { render, screen, waitFor } from '@testing-library/react';
+import { fireEvent, render, screen, waitFor } from '@testing-library/react';
 import userEvent from '@testing-library/user-event';
 import {
   beforeEach,
@@ -86,6 +86,7 @@ vi.mock('./store/tasksStore', () => {
 });
 
 import App from './App';
+import AppThemeProvider from './theme/AppThemeProvider';
 import { useTasksStore } from './store/tasksStore';
 
 type MockedStoreHook = typeof useTasksStore & {
@@ -95,6 +96,13 @@ type MockedStoreHook = typeof useTasksStore & {
 describe('App', () => {
   const store = useTasksStore as MockedStoreHook;
 
+  const renderApp = () =>
+    render(
+      <AppThemeProvider>
+        <App />
+      </AppThemeProvider>,
+    );
+
   beforeEach(() => {
     store.mocks.reset();
     vi.clearAllMocks();
@@ -102,7 +110,7 @@ describe('App', () => {
 
   it('renders tasks and triggers completion toggle', async () => {
     const user = userEvent.setup();
-    render(<App />);
+    renderApp();
 
     expect(store.mocks.fetchTasksMock).toHaveBeenCalledTimes(1);
     expect(screen.getByText(/Plan sprint/i)).toBeInTheDocument();
@@ -119,7 +127,7 @@ describe('App', () => {
       error: 'Unable to fetch tasks',
     });
 
-    render(<App />);
+    renderApp();
 
     expect(screen.getByRole('alert')).toHaveTextContent(
       'Unable to fetch tasks',
@@ -127,25 +135,48 @@ describe('App', () => {
   });
 
   it('submits a new task via the creation form', async () => {
-    const user = userEvent.setup();
     store.mocks.reset({ tasks: [] });
 
-    render(<App />);
+    renderApp();
 
-    await user.type(screen.getByLabelText(/Task title/i), '  Ship UI  ');
-    await user.type(
-      screen.getByLabelText(/Description/i),
-      'Write release notes',
-    );
-    await user.click(screen.getByRole('button', { name: /Create Task/i }));
+    const titleInput = screen.getByLabelText(
+      /Task title/i,
+    ) as HTMLInputElement;
+    const descriptionInput = screen.getByLabelText(
+      /Description/i,
+    ) as HTMLTextAreaElement;
 
-    await waitFor(() => {
-      expect(store.mocks.createTaskMock).toHaveBeenCalledWith({
-        title: 'Ship UI',
-        description: 'Write release notes',
-      });
+    fireEvent.change(titleInput, { target: { value: '  Ship UI  ' } });
+    fireEvent.change(descriptionInput, {
+      target: { value: 'Write release notes' },
+    });
+
+    fireEvent.click(screen.getByRole('button', { name: /Create Task/i }));
+
+    expect(store.mocks.createTaskMock).toHaveBeenCalled();
+
+    expect(store.mocks.createTaskMock).toHaveBeenCalledWith({
+      title: 'Ship UI',
+      description: 'Write release notes',
     });
 
     expect(screen.getByLabelText(/Task title/i)).toHaveValue('');
+  });
+
+  it('toggles between light and dark modes', async () => {
+    const user = userEvent.setup();
+
+    renderApp();
+
+    const toggleButton = screen.getByRole('button', { name: /toggle theme/i });
+    expect(toggleButton).toBeInTheDocument();
+
+    await user.click(toggleButton);
+
+    await waitFor(() => {
+      expect(window.localStorage.getItem('task-manager-ui-color-mode')).toBe(
+        'dark',
+      );
+    });
   });
 });
