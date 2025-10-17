@@ -5,6 +5,7 @@ import { Box, Button, TextField, alpha, useTheme } from '@mui/material';
 interface TaskFormProps {
   onSubmit: (payload: { title: string; description?: string }) => void;
   isSubmitting?: boolean;
+  autoFocusTitle?: boolean;
 }
 
 const initialFormState = {
@@ -12,7 +13,11 @@ const initialFormState = {
   description: '',
 };
 
-const TaskForm = ({ onSubmit, isSubmitting = false }: TaskFormProps) => {
+const TaskForm = ({
+  onSubmit,
+  isSubmitting = false,
+  autoFocusTitle = false,
+}: TaskFormProps) => {
   const [formState, setFormState] = useState(initialFormState);
   const [titleError, setTitleError] = useState<string | null>(null);
   const theme = useTheme();
@@ -60,6 +65,7 @@ const TaskForm = ({ onSubmit, isSubmitting = false }: TaskFormProps) => {
         error={Boolean(titleError)}
         helperText={titleError ?? undefined}
         variant="filled"
+        autoFocus={autoFocusTitle}
         InputProps={{
           disableUnderline: true,
           sx: {

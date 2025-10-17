@@ -75,12 +75,17 @@ const App = () => {
 
   type TaskTab = 'inProgress' | 'completed';
   const [activeTab, setActiveTab] = useState<TaskTab>('inProgress');
+  const [isCreateFormOpen, setIsCreateFormOpen] = useState(false);
 
   const handleTabChange = (
     _: SyntheticEvent,
     newValue: TaskTab,
   ) => {
     setActiveTab(newValue);
+  };
+
+  const handleOpenCreateForm = () => {
+    setIsCreateFormOpen(true);
   };
 
   const isLight = theme.palette.mode === 'light';
@@ -179,6 +184,9 @@ const App = () => {
               sx={{
                 p: { xs: 3, md: 4 },
                 height: '100%',
+                display: 'flex',
+                flexDirection: 'column',
+                gap: 2.5,
                 backgroundColor: surfaceColor,
                 borderColor: borderSoft,
                 backdropFilter: 'blur(12px)',
@@ -192,10 +200,22 @@ const App = () => {
               >
                 Quick add
               </Typography>
-              <TaskForm
-                onSubmit={(payload) => void createTask(payload)}
-                isSubmitting={isLoading}
-              />
+              {isCreateFormOpen ? (
+                <TaskForm
+                  onSubmit={(payload) => void createTask(payload)}
+                  isSubmitting={isLoading}
+                  autoFocusTitle
+                />
+              ) : (
+                <Button
+                  variant="contained"
+                  size="large"
+                  onClick={handleOpenCreateForm}
+                  sx={{ alignSelf: { xs: 'stretch', sm: 'flex-start' } }}
+                >
+                  Create Task
+                </Button>
+              )}
             </Paper>
           </Box>
 
