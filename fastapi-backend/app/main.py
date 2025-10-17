@@ -1,6 +1,6 @@
 import json
 import logging
-from pathlib import Path
+from pathlib import Path as FilePath
 from typing import Dict, List
 
 from fastapi import FastAPI, HTTPException, Path
@@ -23,7 +23,7 @@ _tasks: Dict[int, Task] = {}
 _order: List[int] = []
 _counter = 0
 _logger = logging.getLogger(__name__)
-_data_file = Path(__file__).resolve().parent / "tasks.json"
+_data_file = FilePath(__file__).resolve().parent / "tasks.json"
 
 
 def _next_id() -> int:
