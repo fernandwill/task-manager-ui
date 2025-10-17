@@ -7,11 +7,13 @@ import {
   Container,
   Paper,
   Stack,
+  Tab,
+  Tabs,
   Typography,
   alpha,
   useTheme,
 } from '@mui/material';
-import { useEffect, useMemo } from 'react';
+import { SyntheticEvent, useEffect, useMemo, useState } from 'react';
 import ReportDownloadButton from './components/ReportDownloadButton';
 import TaskForm from './components/TaskForm';
 import TaskList from './components/TaskList';
@@ -56,11 +58,30 @@ const App = () => {
   const stats = useMemo(() => {
     const total = tasks.length;
     const completed = tasks.filter((task) => task.completed).length;
-    const pending = total - completed;
+    const inProgress = total - completed;
     const completionRate = total ? Math.round((completed / total) * 100) : 0;
 
-    return { total, completed, pending, completionRate };
+    return { total, completed, inProgress, completionRate };
   }, [tasks]);
+
+  const inProgressTasks = useMemo(
+    () => tasks.filter((task) => !task.completed),
+    [tasks],
+  );
+  const completedTasks = useMemo(
+    () => tasks.filter((task) => task.completed),
+    [tasks],
+  );
+
+  type TaskTab = 'inProgress' | 'completed';
+  const [activeTab, setActiveTab] = useState<TaskTab>('inProgress');
+
+  const handleTabChange = (
+    _: SyntheticEvent,
+    newValue: TaskTab,
+  ) => {
+    setActiveTab(newValue);
+  };
 
   const isLight = theme.palette.mode === 'light';
   const surfaceColor = isLight
@@ -147,7 +168,7 @@ const App = () => {
                   sx={{ borderColor: borderStrong }}
                 />
                 <Chip
-                  label={`${stats.pending} Remaining`}
+                  label={`${stats.inProgress} In progress`}
                   variant="outlined"
                   sx={{ borderColor: borderStrong }}
                 />
@@ -208,7 +229,7 @@ const App = () => {
               mb={3}
             >
               <Box>
-                <Typography variant="h5">Team Tasks</Typography>
+                <Typography variant="h5">Task List</Typography>
                 <Typography variant="body2" color="text.secondary">
                   {stats.total
                     ? `${stats.completionRate}% completed · ${stats.total} tasks`
@@ -218,20 +239,50 @@ const App = () => {
               <ReportDownloadButton tasks={tasks} />
             </Stack>
 
-            {isLoading && !tasks.length ? (
-              <Stack direction="row" spacing={2} alignItems="center">
-                <CircularProgress size={20} />
-                <Typography variant="body2" color="text.secondary">
-                  Syncing tasks…
-                </Typography>
-              </Stack>
-            ) : (
-              <TaskList
-                tasks={tasks}
-                onToggle={(taskId) => void toggleTaskCompletion(taskId)}
-                onDelete={(taskId) => void deleteTask(taskId)}
-              />
-            )}
+            <Stack spacing={3}>
+              <Tabs
+                value={activeTab}
+                onChange={handleTabChange}
+                aria-label="Task progress tabs"
+                sx={{
+                  alignSelf: { xs: 'stretch', md: 'flex-start' },
+                  '& .MuiTabs-indicator': {
+                    backgroundColor: theme.palette.primary.main,
+                  },
+                }}
+              >
+                <Tab
+                  label={`In progress (${inProgressTasks.length})`}
+                  value="inProgress"
+                  disableRipple
+                />
+                <Tab
+                  label={`Completed (${completedTasks.length})`}
+                  value="completed"
+                  disableRipple
+                />
+              </Tabs>
+
+              {isLoading && !tasks.length ? (
+                <Stack direction="row" spacing={2} alignItems="center">
+                  <CircularProgress size={20} />
+                  <Typography variant="body2" color="text.secondary">
+                    Syncing tasks…
+                  </Typography>
+                </Stack>
+              ) : (
+                <TaskList
+                  tasks={
+                    activeTab === 'inProgress'
+                      ? inProgressTasks
+                      : completedTasks
+                  }
+                  variant={activeTab}
+                  onToggle={(taskId) => void toggleTaskCompletion(taskId)}
+                  onDelete={(taskId) => void deleteTask(taskId)}
+                />
+              )}
+            </Stack>
           </Paper>
         </Stack>
       </Container>
