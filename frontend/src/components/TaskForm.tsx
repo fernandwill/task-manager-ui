@@ -109,9 +109,14 @@ const TaskForm = ({
       <Button
         type="submit"
         variant="contained"
+        color="primary"
         size="large"
         disabled={isSubmitting}
-        sx={{ alignSelf: { xs: 'stretch', sm: 'flex-start' } }}
+        sx={{
+          alignSelf: { xs: 'stretch', sm: 'flex-start' },
+          boxShadow: 'none',
+          fontWeight: 600,
+        }}
       >
         Create Task
       </Button>

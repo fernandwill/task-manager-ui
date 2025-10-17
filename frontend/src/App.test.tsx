@@ -15,6 +15,7 @@ const storeMocks = vi.hoisted(() => {
   const deleteTaskMock = vi.fn().mockResolvedValue(true);
   const updateTaskMock = vi.fn().mockResolvedValue(true);
   const clearSuccessMessageMock = vi.fn();
+  const reorderTasksMock = vi.fn();
 
   type StoreState = {
     tasks: Array<{
@@ -32,6 +33,7 @@ const storeMocks = vi.hoisted(() => {
     deleteTask: typeof deleteTaskMock;
     updateTask: typeof updateTaskMock;
     clearSuccessMessage: typeof clearSuccessMessageMock;
+    reorderTasks: typeof reorderTasksMock;
   };
 
   const baseState = (): StoreState => ({
@@ -53,6 +55,7 @@ const storeMocks = vi.hoisted(() => {
     deleteTask: deleteTaskMock,
     updateTask: updateTaskMock,
     clearSuccessMessage: clearSuccessMessageMock,
+    reorderTasks: reorderTasksMock,
   });
 
   let state = baseState();
@@ -67,6 +70,7 @@ const storeMocks = vi.hoisted(() => {
       deleteTask: deleteTaskMock,
       updateTask: updateTaskMock,
       clearSuccessMessage: clearSuccessMessageMock,
+      reorderTasks: reorderTasksMock,
     };
   };
 
@@ -78,6 +82,7 @@ const storeMocks = vi.hoisted(() => {
     toggleTaskCompletionMock,
     deleteTaskMock,
     updateTaskMock,
+    reorderTasksMock,
     reset,
     getState,
   };
@@ -216,7 +221,7 @@ describe('App', () => {
 
     renderApp();
 
-    const toggleButton = screen.getByRole('button', { name: /toggle theme/i });
+    const toggleButton = screen.getByLabelText(/toggle theme/i);
     expect(toggleButton).toBeInTheDocument();
 
     await user.click(toggleButton);

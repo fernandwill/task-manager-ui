@@ -36,6 +36,10 @@ interface TasksState {
     payload: Pick<Task, 'title' | 'description'>,
   ) => Promise<boolean>;
   deleteTask: (taskId: number) => Promise<boolean>;
+  reorderTasks: (
+    orderedIds: number[],
+    variant: 'inProgress' | 'completed',
+  ) => void;
   clearSuccessMessage: () => void;
 }
 
@@ -155,6 +159,30 @@ export const useTasksStore = create<TasksState>((set, get) => ({
     } finally {
       set({ isLoading: false });
     }
+  },
+
+  reorderTasks(orderedIds, variant) {
+    const tasks = get().tasks;
+    const targetList =
+      variant === 'completed'
+        ? tasks.filter((task) => task.completed)
+        : tasks.filter((task) => !task.completed);
+    const otherList =
+      variant === 'completed'
+        ? tasks.filter((task) => !task.completed)
+        : tasks.filter((task) => task.completed);
+
+    const taskMap = new Map(targetList.map((task) => [task.id, task]));
+    const reordered = orderedIds
+      .map((taskId) => taskMap.get(taskId))
+      .filter((task): task is Task => Boolean(task));
+
+    const merged =
+      variant === 'completed'
+        ? [...otherList, ...reordered]
+        : [...reordered, ...otherList];
+
+    set({ tasks: merged });
   },
 }));
 const TASKS_ENDPOINT = '/tasks';

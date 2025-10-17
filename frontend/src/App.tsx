@@ -47,6 +47,7 @@ const App = () => {
   const clearSuccessMessage = useTasksStore(
     (state) => state.clearSuccessMessage,
   );
+  const reorderTasks = useTasksStore((state) => state.reorderTasks);
   const [taskToDelete, setTaskToDelete] = useState<Task | null>(null);
   const [taskToEdit, setTaskToEdit] = useState<Task | null>(null);
   const [isEditSuccessOpen, setIsEditSuccessOpen] = useState(false);
@@ -180,16 +181,19 @@ const App = () => {
           <Box sx={{ display: 'flex', justifyContent: 'flex-end' }}>
             <Button
               size="small"
-              variant="outlined"
+              variant="text"
               onClick={toggleMode}
               aria-label="Toggle theme"
               sx={{
-                borderColor: borderSoft,
                 color: 'inherit',
-                letterSpacing: '0.12em',
                 minWidth: 0,
                 px: 1.5,
-                '&:hover': { borderColor: borderStrong },
+                '&:hover': {
+                  backgroundColor: alpha(
+                    theme.palette.text.primary,
+                    isLight ? 0.06 : 0.14,
+                  ),
+                },
               }}
             >
               <Box
@@ -367,11 +371,15 @@ const App = () => {
                   label={`In progress (${inProgressTasks.length})`}
                   value="inProgress"
                   disableRipple
+                  wrapped
+                  sx={{ textTransform: 'none', fontWeight: 600 }}
                 />
                 <Tab
                   label={`Completed (${completedTasks.length})`}
                   value="completed"
                   disableRipple
+                  wrapped
+                  sx={{ textTransform: 'none', fontWeight: 600 }}
                 />
               </Tabs>
 
@@ -393,6 +401,7 @@ const App = () => {
                   onToggle={(taskId) => void toggleTaskCompletion(taskId)}
                   onDelete={handleDeleteRequest}
                   onEdit={handleEditRequest}
+                  onReorder={(ids) => reorderTasks(ids, activeTab)}
                 />
               )}
             </Stack>

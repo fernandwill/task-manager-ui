@@ -1,19 +1,32 @@
-import AssignmentTurnedInIcon from '@mui/icons-material/AssignmentTurnedIn';
-import EditIcon from '@mui/icons-material/Edit';
+import { useEffect, useMemo, useState } from 'react';
 import {
   Box,
   Button,
   Chip,
   IconButton,
-  List,
-  ListItem,
-  ListItemText,
+  Paper,
   Stack,
   Typography,
   alpha,
   useTheme,
 } from '@mui/material';
+import AssignmentTurnedInIcon from '@mui/icons-material/AssignmentTurnedIn';
+import CheckCircleIcon from '@mui/icons-material/CheckCircle';
 import DeleteIcon from '@mui/icons-material/Delete';
+import EditIcon from '@mui/icons-material/Edit';
+import {
+  DndContext,
+  PointerSensor,
+  useSensor,
+  useSensors,
+} from '@dnd-kit/core';
+import {
+  SortableContext,
+  arrayMove,
+  useSortable,
+} from '@dnd-kit/sortable';
+import { CSS } from '@dnd-kit/utilities';
+import type { DragEndEvent } from '@dnd-kit/core';
 import type { Task } from '../store/tasksStore';
 
 interface TaskListProps {
@@ -21,6 +34,7 @@ interface TaskListProps {
   onToggle: (taskId: number) => void;
   onDelete: (taskId: number) => void;
   onEdit?: (taskId: number) => void;
+  onReorder: (orderedIds: number[]) => void;
   variant: 'inProgress' | 'completed';
 }
 
@@ -29,6 +43,7 @@ const TaskList = ({
   onToggle,
   onDelete,
   onEdit,
+  onReorder,
   variant,
 }: TaskListProps) => {
   const theme = useTheme();
@@ -63,7 +78,7 @@ const TaskList = ({
       >
         <AssignmentTurnedInIcon sx={{ fontSize: 48, color: mutedIcon }} />
         <Typography variant="h6" fontWeight={500}>
-          {isInProgress ? 'You’re all caught up' : 'Nothing completed yet'}
+          {isInProgress ? "You're all caught up" : 'Nothing completed yet'}
         </Typography>
         <Typography variant="body2">
           {isInProgress
@@ -74,154 +89,239 @@ const TaskList = ({
     );
   }
 
+  const [orderedTasks, setOrderedTasks] = useState(tasks);
+
+  useEffect(() => {
+    setOrderedTasks(tasks);
+  }, [tasks]);
+
+  const sensors = useSensors(
+    useSensor(PointerSensor, {
+      activationConstraint: { distance: 6 },
+    }),
+  );
+
+  const handleDragEnd = (event: DragEndEvent) => {
+    const { active, over } = event;
+
+    if (!over || active.id === over.id) {
+      return;
+    }
+
+    const oldIndex = orderedTasks.findIndex(
+      (task) => task.id.toString() === active.id,
+    );
+    const newIndex = orderedTasks.findIndex(
+      (task) => task.id.toString() === over.id,
+    );
+
+    if (oldIndex === -1 || newIndex === -1) {
+      return;
+    }
+
+    const newOrder = arrayMove(orderedTasks, oldIndex, newIndex);
+    setOrderedTasks(newOrder);
+    onReorder(newOrder.map((task) => task.id));
+  };
+
+  const sortableItems = useMemo(
+    () => orderedTasks.map((task) => task.id.toString()),
+    [orderedTasks],
+  );
+
   return (
-    <List disablePadding>
-      {tasks.map((task) => (
-        <ListItem
-          key={task.id}
-          disableGutters
+    <DndContext sensors={sensors} onDragEnd={handleDragEnd}>
+      <SortableContext items={sortableItems}>
+        <Box
           sx={{
-            px: 2,
-            py: 1.5,
-            mb: 1.5,
-            borderRadius: 2,
-            border: `1px solid ${borderColor}`,
-            backgroundColor: surfaceColor,
-            backdropFilter: 'blur(8px)',
-            transition: 'all 0.2s ease',
-            display: 'flex',
-            alignItems: 'center',
-            '& .task-action': {
-              opacity: 0,
-              transform: 'translateY(4px)',
-              transition: 'opacity 0.2s ease, transform 0.2s ease',
-            },
-            ...(variant === 'completed'
-              ? {
-                  '& .task-action-icon': {
-                    width: 0,
-                    marginLeft: 0,
-                    padding: 0,
-                    opacity: 0,
-                    overflow: 'hidden',
-                    transform: 'translateY(4px)',
-                    transition:
-                      'opacity 0.2s ease, transform 0.2s ease, width 0.2s ease, margin 0.2s ease, padding 0.2s ease',
-                  },
-                }
-              : {}),
-            '&:hover': {
-              borderColor: borderColorHover,
-              transform: 'translateY(-1px)',
-              '& .task-action': {
-                opacity: 1,
-                transform: 'translateY(0)',
-              },
-              ...(variant === 'completed'
-                ? {
-                    '& .task-action-icon': {
-                      width: 36,
-                      marginLeft: theme.spacing(1.5),
-                      padding: theme.spacing(1),
-                      opacity: 1,
-                    },
-                  }
-                : {}),
+            display: 'grid',
+            gap: 2.4,
+            gridTemplateColumns: {
+              xs: '1fr',
+              sm: 'repeat(2, minmax(0, 1fr))',
+              lg: 'repeat(3, minmax(0, 1fr))',
             },
           }}
         >
-          <ListItemText
-            id={`task-${task.id}`}
-            primary={task.title}
-            secondary={task.description}
-            primaryTypographyProps={{
-              sx:
-                variant === 'completed'
-                  ? { color: 'text.secondary' }
-                  : undefined,
+          {orderedTasks.map((task) => (
+            <SortableTaskCard
+              key={task.id}
+              task={task}
+              variant={variant}
+              surfaceColor={surfaceColor}
+              borderColor={borderColor}
+              borderColorHover={borderColorHover}
+              mutedIcon={mutedIcon}
+              onToggle={onToggle}
+              onDelete={onDelete}
+              onEdit={onEdit}
+            />
+          ))}
+        </Box>
+      </SortableContext>
+    </DndContext>
+  );
+};
+
+interface SortableTaskCardProps {
+  task: Task;
+  variant: 'inProgress' | 'completed';
+  surfaceColor: string;
+  borderColor: string;
+  borderColorHover: string;
+  mutedIcon: string;
+  onToggle: (taskId: number) => void;
+  onDelete: (taskId: number) => void;
+  onEdit?: (taskId: number) => void;
+}
+
+const SortableTaskCard = ({
+  task,
+  variant,
+  surfaceColor,
+  borderColor,
+  borderColorHover,
+  mutedIcon,
+  onToggle,
+  onDelete,
+  onEdit,
+}: SortableTaskCardProps) => {
+  const theme = useTheme();
+  const isLight = theme.palette.mode === 'light';
+  const {
+    attributes,
+    listeners,
+    setNodeRef,
+    transform,
+    transition,
+    isDragging,
+  } = useSortable({ id: task.id.toString() });
+
+  const style = {
+    transform: CSS.Transform.toString(transform),
+    transition,
+    cursor: isDragging ? 'grabbing' : 'grab',
+  } as const;
+
+  return (
+    <Paper
+      ref={setNodeRef}
+      elevation={0}
+      style={style}
+      {...attributes}
+      {...listeners}
+      sx={{
+        p: 2.5,
+        borderRadius: 3,
+        border: `1px solid ${borderColor}`,
+        backgroundColor: surfaceColor,
+        backdropFilter: 'blur(12px)',
+        display: 'flex',
+        flexDirection: 'column',
+        gap: 1.5,
+        transition: 'border-color 0.2s ease, transform 0.2s ease',
+        height: '100%',
+        opacity: isDragging ? 0.85 : 1,
+        boxShadow: isDragging
+          ? `0 12px 24px ${alpha(
+              theme.palette.primary.main,
+              isLight ? 0.18 : 0.3,
+            )}`
+          : 'none',
+        '&:hover': {
+          borderColor: borderColorHover,
+          transform: 'translateY(-6px)',
+        },
+      }}
+    >
+      <Stack spacing={1}>
+        <Typography
+          variant="subtitle1"
+          fontWeight={600}
+          color={variant === 'completed' ? 'text.secondary' : 'text.primary'}
+        >
+          {task.title}
+        </Typography>
+        {task.description ? (
+          <Typography variant="body2" color="text.secondary">
+            {task.description}
+          </Typography>
+        ) : null}
+      </Stack>
+
+      <Box sx={{ flexGrow: 1 }} />
+
+      <Stack direction="row" justifyContent="space-between" alignItems="center">
+        {variant === 'inProgress' ? (
+          <Button
+            size="small"
+            variant="outlined"
+            onClick={() => onToggle(task.id)}
+            aria-label={`Mark ${task.title} as done`}
+            sx={{
+              borderColor: alpha(theme.palette.primary.main, 0.35),
+              color: theme.palette.text.primary,
+              '&:hover': {
+                borderColor: theme.palette.primary.main,
+                backgroundColor: alpha(
+                  theme.palette.primary.main,
+                  isLight ? 0.08 : 0.16,
+                ),
+              },
             }}
-          />
-          <Stack
-            direction="row"
-            spacing={variant === 'completed' ? 0 : 1.5}
-            alignItems="center"
-            sx={{ marginLeft: 'auto' }}
           >
-            {variant === 'inProgress' ? (
-              <Button
-                size="small"
-                variant="outlined"
-                onClick={() => onToggle(task.id)}
-                aria-label={`Mark ${task.title} as done`}
-                className="task-action"
-                sx={{
-                  borderColor: borderColor,
-                  color: theme.palette.text.primary,
-                  '&:hover': {
-                    borderColor: theme.palette.primary.main,
-                    backgroundColor: alpha(
-                      theme.palette.primary.main,
-                      isLight ? 0.08 : 0.16,
-                    ),
-                  },
-                }}
-              >
-                Mark as Done
-              </Button>
-            ) : (
-              <Chip
-                size="small"
-                label="COMPLETED"
-                sx={{
-                  borderColor,
-                  color: isLight
-                    ? 'rgba(17, 17, 24, 0.56)'
-                    : alpha(theme.palette.common.white, 0.72),
-                  backgroundColor: alpha(
-                    theme.palette.text.primary,
-                    isLight ? 0.04 : 0.12,
-                  ),
-                  flexShrink: 0,
-                }}
-                variant="outlined"
-              />
-            )}
-            <IconButton
-              edge="end"
-              aria-label={`edit ${task.title}`}
-              onClick={() => onEdit?.(task.id)}
-              className="task-action task-action-icon"
-              sx={{
-                color: mutedIcon,
-                '&:hover': {
-                  color: isLight
-                    ? 'rgba(17, 17, 24, 0.56)'
-                    : alpha(theme.palette.common.white, 0.72),
-                },
-              }}
-            >
-              <EditIcon />
-            </IconButton>
-            <IconButton
-              edge="end"
-              aria-label={`delete ${task.title}`}
-              onClick={() => onDelete(task.id)}
-              className="task-action task-action-icon"
-              sx={{
-                color: mutedIcon,
-                '&:hover': {
-                  color: isLight
-                    ? 'rgba(17, 17, 24, 0.56)'
-                    : alpha(theme.palette.common.white, 0.72),
-                },
-              }}
-            >
-              <DeleteIcon />
-            </IconButton>
-          </Stack>
-        </ListItem>
-      ))}
-    </List>
+            Mark as Done
+          </Button>
+        ) : (
+          <Chip
+            size="small"
+            label="COMPLETED"
+            icon={<CheckCircleIcon fontSize="small" />}
+            sx={{
+              borderColor: alpha(theme.palette.success.main, 0.2),
+              color: theme.palette.success.main,
+              backgroundColor: alpha(theme.palette.success.main, 0.12),
+              '& .MuiChip-icon': {
+                color: theme.palette.success.main,
+              },
+            }}
+            variant="outlined"
+          />
+        )}
+        <Stack direction="row" spacing={1}>
+          <IconButton
+            edge="end"
+            aria-label={`edit ${task.title}`}
+            onClick={() => onEdit?.(task.id)}
+            sx={{
+              color: mutedIcon,
+              '&:hover': {
+                color: isLight
+                  ? 'rgba(17, 17, 24, 0.56)'
+                  : alpha(theme.palette.common.white, 0.72),
+              },
+            }}
+          >
+            <EditIcon />
+          </IconButton>
+          <IconButton
+            edge="end"
+            aria-label={`delete ${task.title}`}
+            onClick={() => onDelete(task.id)}
+            sx={{
+              color: mutedIcon,
+              '&:hover': {
+                color: isLight
+                  ? 'rgba(17, 17, 24, 0.56)'
+                  : alpha(theme.palette.common.white, 0.72),
+              },
+            }}
+          >
+            <DeleteIcon />
+          </IconButton>
+        </Stack>
+      </Stack>
+    </Paper>
   );
 };
 
