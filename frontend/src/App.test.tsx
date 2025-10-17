@@ -1,4 +1,4 @@
-import { fireEvent, render, screen, waitFor } from '@testing-library/react';
+import { fireEvent, render, screen, waitFor, within } from '@testing-library/react';
 import userEvent from '@testing-library/user-event';
 import {
   beforeEach,
@@ -12,7 +12,8 @@ const storeMocks = vi.hoisted(() => {
   const fetchTasksMock = vi.fn().mockResolvedValue(undefined);
   const createTaskMock = vi.fn().mockResolvedValue(undefined);
   const toggleTaskCompletionMock = vi.fn().mockResolvedValue(undefined);
-  const deleteTaskMock = vi.fn().mockResolvedValue(undefined);
+  const deleteTaskMock = vi.fn().mockResolvedValue(true);
+  const updateTaskMock = vi.fn().mockResolvedValue(true);
   const clearSuccessMessageMock = vi.fn();
 
   type StoreState = {
@@ -29,6 +30,7 @@ const storeMocks = vi.hoisted(() => {
     createTask: typeof createTaskMock;
     toggleTaskCompletion: typeof toggleTaskCompletionMock;
     deleteTask: typeof deleteTaskMock;
+    updateTask: typeof updateTaskMock;
     clearSuccessMessage: typeof clearSuccessMessageMock;
   };
 
@@ -49,6 +51,7 @@ const storeMocks = vi.hoisted(() => {
     createTask: createTaskMock,
     toggleTaskCompletion: toggleTaskCompletionMock,
     deleteTask: deleteTaskMock,
+    updateTask: updateTaskMock,
     clearSuccessMessage: clearSuccessMessageMock,
   });
 
@@ -62,6 +65,7 @@ const storeMocks = vi.hoisted(() => {
       createTask: createTaskMock,
       toggleTaskCompletion: toggleTaskCompletionMock,
       deleteTask: deleteTaskMock,
+      updateTask: updateTaskMock,
       clearSuccessMessage: clearSuccessMessageMock,
     };
   };
@@ -73,6 +77,7 @@ const storeMocks = vi.hoisted(() => {
     createTaskMock,
     toggleTaskCompletionMock,
     deleteTaskMock,
+    updateTaskMock,
     reset,
     getState,
   };
@@ -220,6 +225,73 @@ describe('App', () => {
       expect(window.localStorage.getItem('task-manager-ui-color-mode')).toBe(
         'dark',
       );
+    });
+  });
+
+  it('confirms before deleting a task', async () => {
+    const user = userEvent.setup();
+
+    renderApp();
+
+    await user.click(screen.getByRole('button', { name: /delete plan sprint/i }));
+
+    const dialog = screen.getByRole('dialog', { name: /delete task/i });
+    expect(dialog).toBeInTheDocument();
+
+    await user.click(within(dialog).getByRole('button', { name: /delete/i }));
+
+    expect(store.mocks.deleteTaskMock).toHaveBeenCalledWith(1);
+
+    await waitFor(() => {
+      expect(
+        screen.queryByRole('dialog', { name: /delete task/i }),
+      ).not.toBeInTheDocument();
+    });
+  });
+
+  it('allows editing a task', async () => {
+    const user = userEvent.setup();
+
+    renderApp();
+
+    await user.click(screen.getByRole('button', { name: /edit plan sprint/i }));
+
+    const dialog = screen.getByRole('dialog', { name: /edit task/i });
+    const titleInput = within(dialog).getByLabelText(/task title/i);
+    const descriptionInput = within(dialog).getByLabelText(/description/i);
+
+    await user.clear(titleInput);
+    await user.type(titleInput, 'Plan sprint v2');
+    await user.clear(descriptionInput);
+    await user.type(descriptionInput, 'Refine sprint goals');
+
+    await user.click(within(dialog).getByRole('button', { name: /save changes/i }));
+    await waitFor(() => {
+      expect(store.mocks.updateTaskMock).toHaveBeenCalledWith(1, {
+        title: 'Plan sprint v2',
+        description: 'Refine sprint goals',
+      });
+    });
+
+    expect(store.mocks.updateTaskMock).toHaveBeenCalledTimes(1);
+    await waitFor(() => {
+      expect(
+        screen.queryByRole('dialog', { name: /edit task/i }),
+      ).not.toBeInTheDocument();
+    });
+  });
+
+  it('shows a success dialog when a task update succeeds', async () => {
+    store.mocks.reset({
+      successMessage: 'Task updated successfully.',
+    });
+
+    renderApp();
+
+    await waitFor(() => {
+      expect(
+        document.querySelector('[aria-labelledby="edit-task-success-title"]'),
+      ).not.toBeNull();
     });
   });
 });
