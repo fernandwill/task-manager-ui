@@ -39,7 +39,7 @@ interface TasksState {
   reorderTasks: (
     orderedIds: number[],
     variant: 'inProgress' | 'completed',
-  ) => void;
+  ) => Promise<void>;
   clearSuccessMessage: () => void;
 }
 
@@ -161,16 +161,16 @@ export const useTasksStore = create<TasksState>((set, get) => ({
     }
   },
 
-  reorderTasks(orderedIds, variant) {
-    const tasks = get().tasks;
+  async reorderTasks(orderedIds, variant) {
+    const previousTasks = get().tasks;
     const targetList =
       variant === 'completed'
-        ? tasks.filter((task) => task.completed)
-        : tasks.filter((task) => !task.completed);
+        ? previousTasks.filter((task) => task.completed)
+        : previousTasks.filter((task) => !task.completed);
     const otherList =
       variant === 'completed'
-        ? tasks.filter((task) => !task.completed)
-        : tasks.filter((task) => task.completed);
+        ? previousTasks.filter((task) => !task.completed)
+        : previousTasks.filter((task) => task.completed);
 
     const taskMap = new Map(targetList.map((task) => [task.id, task]));
     const reordered = orderedIds
@@ -182,7 +182,18 @@ export const useTasksStore = create<TasksState>((set, get) => ({
         ? [...otherList, ...reordered]
         : [...reordered, ...otherList];
 
-    set({ tasks: merged });
+    set({ tasks: merged, error: null });
+
+    try {
+      await apiClient.post(`${TASKS_ENDPOINT}/reorder`, {
+        ids: merged.map((task) => task.id),
+      });
+    } catch (err) {
+      set({
+        tasks: previousTasks,
+        error: getErrorMessage(err),
+      });
+    }
   },
 }));
 const TASKS_ENDPOINT = '/tasks';
