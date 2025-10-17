@@ -34,7 +34,7 @@ interface TaskListProps {
   onToggle: (taskId: number) => void;
   onDelete: (taskId: number) => void;
   onEdit?: (taskId: number) => void;
-  onReorder: (orderedIds: number[]) => void;
+  onReorder: (orderedIds: number[]) => Promise<void> | void;
   variant: 'inProgress' | 'completed';
 }
 
@@ -121,7 +121,7 @@ const TaskList = ({
 
     const newOrder = arrayMove(orderedTasks, oldIndex, newIndex);
     setOrderedTasks(newOrder);
-    onReorder(newOrder.map((task) => task.id));
+    void onReorder(newOrder.map((task) => task.id));
   };
 
   const sortableItems = useMemo(
