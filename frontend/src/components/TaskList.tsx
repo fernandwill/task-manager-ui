@@ -1,4 +1,5 @@
 import AssignmentTurnedInIcon from '@mui/icons-material/AssignmentTurnedIn';
+import EditIcon from '@mui/icons-material/Edit';
 import {
   Box,
   Button,
@@ -19,10 +20,17 @@ interface TaskListProps {
   tasks: Task[];
   onToggle: (taskId: number) => void;
   onDelete: (taskId: number) => void;
+  onEdit?: (taskId: number) => void;
   variant: 'inProgress' | 'completed';
 }
 
-const TaskList = ({ tasks, onToggle, onDelete, variant }: TaskListProps) => {
+const TaskList = ({
+  tasks,
+  onToggle,
+  onDelete,
+  onEdit,
+  variant,
+}: TaskListProps) => {
   const theme = useTheme();
   const isLight = theme.palette.mode === 'light';
   const surfaceColor = isLight
@@ -83,9 +91,18 @@ const TaskList = ({ tasks, onToggle, onDelete, variant }: TaskListProps) => {
             transition: 'all 0.2s ease',
             display: 'flex',
             alignItems: 'center',
+            '& .task-action': {
+              opacity: 0,
+              transform: 'translateY(4px)',
+              transition: 'opacity 0.2s ease, transform 0.2s ease',
+            },
             '&:hover': {
               borderColor: borderColorHover,
               transform: 'translateY(-1px)',
+              '& .task-action': {
+                opacity: 1,
+                transform: 'translateY(0)',
+              },
             },
           }}
         >
@@ -107,6 +124,7 @@ const TaskList = ({ tasks, onToggle, onDelete, variant }: TaskListProps) => {
                 variant="outlined"
                 onClick={() => onToggle(task.id)}
                 aria-label={`Mark ${task.title} as done`}
+                className="task-action"
                 sx={{
                   borderColor: borderColor,
                   color: theme.palette.text.primary,
@@ -140,8 +158,25 @@ const TaskList = ({ tasks, onToggle, onDelete, variant }: TaskListProps) => {
             )}
             <IconButton
               edge="end"
+              aria-label={`edit ${task.title}`}
+              onClick={() => onEdit?.(task.id)}
+              className="task-action"
+              sx={{
+                color: mutedIcon,
+                '&:hover': {
+                  color: isLight
+                    ? 'rgba(17, 17, 24, 0.56)'
+                    : alpha(theme.palette.common.white, 0.72),
+                },
+              }}
+            >
+              <EditIcon />
+            </IconButton>
+            <IconButton
+              edge="end"
               aria-label={`delete ${task.title}`}
               onClick={() => onDelete(task.id)}
+              className="task-action"
               sx={{
                 color: mutedIcon,
                 '&:hover': {
