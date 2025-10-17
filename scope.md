@@ -11,10 +11,10 @@ It must support:
 
 Tech Stack
 ● Frontend: React.js + TypeScript
-● Styling: Tailwind CSS or Material UI
-● State Management: Zustand / Redux / React Context
-● API Client: Axios or Fetch
-● PDF Report: jspdf or react-pdf
+● Styling: Material UI
+● State Management: Zustand 
+● API Client: Axios
+● PDF Report: react-pdf
 ● Testing: React Testing Library
 ● Optional Routing: React Router DOM
 
