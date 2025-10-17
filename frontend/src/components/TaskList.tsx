@@ -96,6 +96,20 @@ const TaskList = ({
               transform: 'translateY(4px)',
               transition: 'opacity 0.2s ease, transform 0.2s ease',
             },
+            ...(variant === 'completed'
+              ? {
+                  '& .task-action-icon': {
+                    width: 0,
+                    marginLeft: 0,
+                    padding: 0,
+                    opacity: 0,
+                    overflow: 'hidden',
+                    transform: 'translateY(4px)',
+                    transition:
+                      'opacity 0.2s ease, transform 0.2s ease, width 0.2s ease, margin 0.2s ease, padding 0.2s ease',
+                  },
+                }
+              : {}),
             '&:hover': {
               borderColor: borderColorHover,
               transform: 'translateY(-1px)',
@@ -103,6 +117,16 @@ const TaskList = ({
                 opacity: 1,
                 transform: 'translateY(0)',
               },
+              ...(variant === 'completed'
+                ? {
+                    '& .task-action-icon': {
+                      width: 36,
+                      marginLeft: theme.spacing(1.5),
+                      padding: theme.spacing(1),
+                      opacity: 1,
+                    },
+                  }
+                : {}),
             },
           }}
         >
@@ -117,7 +141,12 @@ const TaskList = ({
                   : undefined,
             }}
           />
-          <Stack direction="row" spacing={1.5} alignItems="center">
+          <Stack
+            direction="row"
+            spacing={variant === 'completed' ? 0 : 1.5}
+            alignItems="center"
+            sx={{ marginLeft: 'auto' }}
+          >
             {variant === 'inProgress' ? (
               <Button
                 size="small"
@@ -160,7 +189,7 @@ const TaskList = ({
               edge="end"
               aria-label={`edit ${task.title}`}
               onClick={() => onEdit?.(task.id)}
-              className="task-action"
+              className="task-action task-action-icon"
               sx={{
                 color: mutedIcon,
                 '&:hover': {
@@ -176,7 +205,7 @@ const TaskList = ({
               edge="end"
               aria-label={`delete ${task.title}`}
               onClick={() => onDelete(task.id)}
-              className="task-action"
+              className="task-action task-action-icon"
               sx={{
                 color: mutedIcon,
                 '&:hover': {
