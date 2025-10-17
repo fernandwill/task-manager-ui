@@ -60,14 +60,30 @@ const ReportDownloadButton = ({ tasks }: ReportDownloadButtonProps) => {
 
   return (
     <Button
-      variant="contained"
-      color="primary"
+      variant="outlined"
       size="large"
       startIcon={<PictureAsPdfIcon />}
       onClick={handleDownload}
       disabled={isGenerating}
       data-testid="report-download-button"
-      sx={{ boxShadow: 'none', fontWeight: 600 }}
+      sx={(theme) => ({
+        fontWeight: 600,
+        borderColor:
+          theme.palette.mode === 'light'
+            ? 'rgba(17, 17, 24, 0.16)'
+            : 'rgba(229, 231, 235, 0.24)',
+        color: 'inherit',
+        '&:hover': {
+          borderColor:
+            theme.palette.mode === 'light'
+              ? 'rgba(17, 17, 24, 0.32)'
+              : 'rgba(229, 231, 235, 0.36)',
+          backgroundColor:
+            theme.palette.mode === 'light'
+              ? 'rgba(17, 17, 24, 0.04)'
+              : 'rgba(148, 163, 184, 0.12)',
+        },
+      })}
     >
       {isGenerating ? 'Preparing report…' : 'Download Report'}
     </Button>
