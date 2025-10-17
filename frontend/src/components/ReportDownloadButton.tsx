@@ -69,7 +69,7 @@ const ReportDownloadButton = ({ tasks }: ReportDownloadButtonProps) => {
       data-testid="report-download-button"
       sx={{ boxShadow: 'none', fontWeight: 600 }}
     >
-      {isGenerating ? 'Preparing report…' : 'Download PDF'}
+      {isGenerating ? 'Preparing report…' : 'Download Report'}
     </Button>
   );
 };

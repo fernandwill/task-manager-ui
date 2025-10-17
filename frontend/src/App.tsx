@@ -194,7 +194,7 @@ const App = () => {
               </Box>
               <Chip
                 icon={<DownloadIcon fontSize="small" />}
-                label="Export PDF"
+                label="Download Report"
                 color="primary"
                 variant="outlined"
                 onClick={() => {
