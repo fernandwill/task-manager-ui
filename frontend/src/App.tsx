@@ -1,6 +1,7 @@
 import {
   Alert,
   Box,
+  Button,
   Chip,
   CircularProgress,
   Container,
@@ -15,9 +16,11 @@ import ReportDownloadButton from './components/ReportDownloadButton';
 import TaskForm from './components/TaskForm';
 import TaskList from './components/TaskList';
 import { useTasksStore } from './store/tasksStore';
+import { useColorMode } from './theme/AppThemeProvider';
 
 const App = () => {
   const theme = useTheme();
+  const { toggleMode } = useColorMode();
   const tasks = useTasksStore((state) => state.tasks);
   const isLoading = useTasksStore((state) => state.isLoading);
   const error = useTasksStore((state) => state.error);
@@ -59,16 +62,51 @@ const App = () => {
     return { total, completed, pending, completionRate };
   }, [tasks]);
 
+  const isLight = theme.palette.mode === 'light';
+  const surfaceColor = isLight
+    ? 'rgba(17, 17, 24, 0.04)'
+    : alpha(theme.palette.common.white, 0.02);
+  const borderSoft = isLight
+    ? 'rgba(17, 17, 24, 0.08)'
+    : alpha(theme.palette.common.white, 0.04);
+  const borderStrong = isLight
+    ? 'rgba(17, 17, 24, 0.12)'
+    : alpha(theme.palette.common.white, 0.08);
+  const gradientHighlight = isLight
+    ? alpha(theme.palette.text.primary, 0.06)
+    : alpha(theme.palette.common.white, 0.08);
+  const gradientAmbient = isLight
+    ? alpha(theme.palette.text.primary, 0.03)
+    : alpha(theme.palette.common.white, 0.04);
+
   return (
     <Box
       sx={{
         minHeight: '100vh',
-        background: `linear-gradient(135deg, ${alpha(theme.palette.primary.main, 0.12)} 0%, ${theme.palette.background.default} 30%, ${theme.palette.background.default} 100%)`,
+        background: `radial-gradient(circle at 20% -10%, ${gradientHighlight} 0%, transparent 55%), radial-gradient(circle at 80% 0%, ${gradientAmbient} 0%, transparent 45%), ${theme.palette.background.default}`,
         py: { xs: 6, md: 8 },
+        px: { xs: 2, md: 0 },
       }}
     >
       <Container maxWidth="lg">
         <Stack spacing={5}>
+          <Box sx={{ display: 'flex', justifyContent: 'flex-end' }}>
+            <Button
+              size="small"
+              variant="outlined"
+              onClick={toggleMode}
+              aria-label="Toggle theme"
+              sx={{
+                borderColor: borderSoft,
+                color: 'inherit',
+                letterSpacing: '0.12em',
+                textTransform: 'uppercase',
+                '&:hover': { borderColor: borderStrong },
+              }}
+            >
+              Toggle theme
+            </Button>
+          </Box>
           <Box
             sx={{
               display: 'grid',
@@ -80,35 +118,58 @@ const App = () => {
             <Paper
               elevation={0}
               sx={{
-                p: 3,
+                p: { xs: 3, md: 4 },
                 height: '100%',
                 display: 'flex',
                 flexDirection: 'column',
-                gap: 2,
+                gap: 2.5,
+                backgroundColor: surfaceColor,
+                backdropFilter: 'blur(12px)',
+                borderColor: borderSoft,
               }}
             >
-              <Typography variant="h4">Build your perfect workflow</Typography>
+              <Typography variant="h4" fontWeight={600}>
+                Minimal noir productivity
+              </Typography>
               <Typography variant="body1" color="text.secondary">
-                Stay on top of priorities, delegate with confidence, and ship on
-                time with insights synced with your FastAPI backend.
+                Streamline tasks in a focused workspace with muted tones and
+                zero distractions.
               </Typography>
               <Stack direction="row" spacing={1} flexWrap="wrap">
-                <Chip label={`${stats.total} Total`} color="primary" />
+                <Chip
+                  label={`${stats.total} Total`}
+                  variant="outlined"
+                  sx={{ borderColor: borderStrong }}
+                />
                 <Chip
                   label={`${stats.completed} Completed`}
-                  color="success"
                   variant="outlined"
+                  sx={{ borderColor: borderStrong }}
                 />
                 <Chip
                   label={`${stats.pending} Remaining`}
-                  color="secondary"
                   variant="outlined"
+                  sx={{ borderColor: borderStrong }}
                 />
               </Stack>
             </Paper>
-            <Paper elevation={0} sx={{ p: 3, height: '100%' }}>
-              <Typography variant="subtitle1" color="text.secondary" mb={1}>
-                Quick Add
+            <Paper
+              elevation={0}
+              sx={{
+                p: { xs: 3, md: 4 },
+                height: '100%',
+                backgroundColor: surfaceColor,
+                borderColor: borderSoft,
+                backdropFilter: 'blur(12px)',
+              }}
+            >
+              <Typography
+                variant="subtitle1"
+                color="text.secondary"
+                mb={1.5}
+                sx={{ textTransform: 'uppercase', letterSpacing: '0.12em' }}
+              >
+                Quick add
               </Typography>
               <TaskForm
                 onSubmit={(payload) => void createTask(payload)}
@@ -133,8 +194,10 @@ const App = () => {
           <Paper
             elevation={0}
             sx={{
-              p: { xs: 2.5, md: 3.5 },
-              border: `1px solid ${alpha(theme.palette.divider, 0.4)}`,
+              p: { xs: 3, md: 4 },
+              borderColor: borderStrong,
+              backgroundColor: surfaceColor,
+              backdropFilter: 'blur(12px)',
             }}
           >
             <Stack

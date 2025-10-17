@@ -1,6 +1,6 @@
 import { useState } from 'react';
 import type { FormEvent } from 'react';
-import { Box, Button, TextField } from '@mui/material';
+import { Box, Button, TextField, alpha, useTheme } from '@mui/material';
 
 interface TaskFormProps {
   onSubmit: (payload: { title: string; description?: string }) => void;
@@ -15,6 +15,12 @@ const initialFormState = {
 const TaskForm = ({ onSubmit, isSubmitting = false }: TaskFormProps) => {
   const [formState, setFormState] = useState(initialFormState);
   const [titleError, setTitleError] = useState<string | null>(null);
+  const theme = useTheme();
+
+  const inputBackground =
+    theme.palette.mode === 'light'
+      ? 'rgba(17, 17, 24, 0.04)'
+      : alpha(theme.palette.common.white, 0.04);
 
   const handleSubmit = (event: FormEvent<HTMLFormElement>) => {
     event.preventDefault();
@@ -53,6 +59,21 @@ const TaskForm = ({ onSubmit, isSubmitting = false }: TaskFormProps) => {
         required
         error={Boolean(titleError)}
         helperText={titleError ?? undefined}
+        variant="filled"
+        InputProps={{
+          disableUnderline: true,
+          sx: {
+            backgroundColor: inputBackground,
+            borderRadius: 2,
+            '&:hover': {
+              backgroundColor:
+                theme.palette.mode === 'light'
+                  ? 'rgba(17, 17, 24, 0.08)'
+                  : alpha(theme.palette.common.white, 0.08),
+            },
+          },
+        }}
+        InputLabelProps={{ sx: { textTransform: 'uppercase', letterSpacing: '0.08em' } }}
       />
       <TextField
         label="Description"
@@ -63,12 +84,28 @@ const TaskForm = ({ onSubmit, isSubmitting = false }: TaskFormProps) => {
         multiline
         minRows={3}
         placeholder="Add context, resources, or acceptance criteria"
+        variant="filled"
+        InputProps={{
+          disableUnderline: true,
+          sx: {
+            backgroundColor: inputBackground,
+            borderRadius: 2,
+            '&:hover': {
+              backgroundColor:
+                theme.palette.mode === 'light'
+                  ? 'rgba(17, 17, 24, 0.08)'
+                  : alpha(theme.palette.common.white, 0.08),
+            },
+          },
+        }}
+        InputLabelProps={{ sx: { textTransform: 'uppercase', letterSpacing: '0.08em' } }}
       />
       <Button
         type="submit"
         variant="contained"
         size="large"
         disabled={isSubmitting}
+        sx={{ alignSelf: { xs: 'stretch', sm: 'flex-start' } }}
       >
         Create Task
       </Button>
