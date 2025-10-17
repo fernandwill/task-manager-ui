@@ -4,6 +4,10 @@ import {
   Button,
   CircularProgress,
   Container,
+  Dialog,
+  DialogActions,
+  DialogContent,
+  DialogTitle,
   Paper,
   Stack,
   Tab,
@@ -14,13 +18,17 @@ import {
 } from '@mui/material';
 import DarkModeOutlinedIcon from '@mui/icons-material/DarkModeOutlined';
 import LightbulbOutlinedIcon from '@mui/icons-material/LightbulbOutlined';
-import { SyntheticEvent, useEffect, useMemo, useState } from 'react';
+import CheckCircleOutlineIcon from '@mui/icons-material/CheckCircleOutline';
+import { useEffect, useMemo, useState } from 'react';
+import type { SyntheticEvent } from 'react';
 import ReportDownloadButton from './components/ReportDownloadButton';
 import TaskForm from './components/TaskForm';
 import TaskList from './components/TaskList';
 import TaskStatusPieChart from './components/TaskStatusPieChart';
 import { useTasksStore } from './store/tasksStore';
 import { useColorMode } from './theme/AppThemeProvider';
+import type { Task } from './store/tasksStore';
+import EditTaskDialog from './components/EditTaskDialog';
 
 const App = () => {
   const theme = useTheme();
@@ -35,16 +43,20 @@ const App = () => {
     (state) => state.toggleTaskCompletion,
   );
   const deleteTask = useTasksStore((state) => state.deleteTask);
+  const updateTask = useTasksStore((state) => state.updateTask);
   const clearSuccessMessage = useTasksStore(
     (state) => state.clearSuccessMessage,
   );
+  const [taskToDelete, setTaskToDelete] = useState<Task | null>(null);
+  const [taskToEdit, setTaskToEdit] = useState<Task | null>(null);
+  const [isEditSuccessOpen, setIsEditSuccessOpen] = useState(false);
 
   useEffect(() => {
     void fetchTasks();
   }, [fetchTasks]);
 
   useEffect(() => {
-    if (!successMessage) {
+    if (!successMessage || successMessage === 'Task updated successfully.') {
       return;
     }
 
@@ -56,6 +68,58 @@ const App = () => {
       window.clearTimeout(timeout);
     };
   }, [successMessage, clearSuccessMessage]);
+
+  useEffect(() => {
+    if (successMessage === 'Task updated successfully.') {
+      setIsEditSuccessOpen(true);
+    }
+  }, [successMessage]);
+
+  useEffect(() => {
+    if (!successMessage) {
+      setIsEditSuccessOpen(false);
+    }
+  }, [successMessage]);
+
+  const handleDeleteRequest = (taskId: number) => {
+    const task = tasks.find((item) => item.id === taskId) ?? null;
+    setTaskToDelete(task);
+  };
+
+  const handleConfirmDelete = async () => {
+    if (!taskToDelete) {
+      return;
+    }
+
+    const wasDeleted = await deleteTask(taskToDelete.id);
+    if (wasDeleted) {
+      setTaskToDelete(null);
+    }
+  };
+
+  const handleEditRequest = (taskId: number) => {
+    const task = tasks.find((item) => item.id === taskId) ?? null;
+    setTaskToEdit(task);
+  };
+
+  const handleSubmitEdit = async (payload: {
+    title: string;
+    description?: string;
+  }) => {
+    if (!taskToEdit) {
+      return;
+    }
+
+    const wasUpdated = await updateTask(taskToEdit.id, payload);
+    if (wasUpdated) {
+      setTaskToEdit(null);
+    }
+  };
+
+  const handleCloseEditSuccess = () => {
+    setIsEditSuccessOpen(false);
+    clearSuccessMessage();
+  };
 
   const stats = useMemo(() => {
     const total = tasks.length;
@@ -247,7 +311,8 @@ const App = () => {
           </Box>
 
           <Stack spacing={2}>
-            {successMessage ? (
+            {successMessage &&
+            successMessage !== 'Task updated successfully.' ? (
               <Alert
                 severity="success"
                 onClose={clearSuccessMessage}
@@ -326,13 +391,74 @@ const App = () => {
                   }
                   variant={activeTab}
                   onToggle={(taskId) => void toggleTaskCompletion(taskId)}
-                  onDelete={(taskId) => void deleteTask(taskId)}
+                  onDelete={handleDeleteRequest}
+                  onEdit={handleEditRequest}
                 />
               )}
             </Stack>
           </Paper>
         </Stack>
       </Container>
+
+      <Dialog
+        open={Boolean(taskToDelete)}
+        onClose={() => setTaskToDelete(null)}
+        aria-labelledby="delete-task-dialog-title"
+      >
+        <DialogTitle id="delete-task-dialog-title">Delete task</DialogTitle>
+        <DialogContent>
+          <Typography variant="body2" color="text.secondary">
+            Are you sure you want to delete ‘{taskToDelete?.title}’? This action
+            cannot be undone.
+          </Typography>
+        </DialogContent>
+        <DialogActions>
+          <Button
+            onClick={() => setTaskToDelete(null)}
+            disabled={isLoading}
+            variant="outlined"
+          >
+            Cancel
+          </Button>
+          <Button
+            onClick={() => void handleConfirmDelete()}
+            color="error"
+            variant="contained"
+            disabled={isLoading}
+          >
+            Delete
+          </Button>
+        </DialogActions>
+      </Dialog>
+
+      <EditTaskDialog
+        open={Boolean(taskToEdit)}
+        task={taskToEdit}
+        onClose={() => setTaskToEdit(null)}
+        onSubmit={handleSubmitEdit}
+        isSubmitting={isLoading}
+      />
+
+      <Dialog
+        open={isEditSuccessOpen}
+        onClose={handleCloseEditSuccess}
+        aria-labelledby="edit-task-success-title"
+      >
+        <DialogTitle id="edit-task-success-title">Task updated</DialogTitle>
+        <DialogContent>
+          <Stack direction="row" spacing={2} alignItems="center" mt={1}>
+            <CheckCircleOutlineIcon color="success" />
+            <Typography>
+              {successMessage ?? 'Task updated successfully.'}
+            </Typography>
+          </Stack>
+        </DialogContent>
+        <DialogActions>
+          <Button onClick={handleCloseEditSuccess} autoFocus>
+            Close
+          </Button>
+        </DialogActions>
+      </Dialog>
     </Box>
   );
 };

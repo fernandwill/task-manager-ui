@@ -31,7 +31,11 @@ interface TasksState {
   fetchTasks: () => Promise<void>;
   createTask: (payload: Pick<Task, 'title' | 'description'>) => Promise<void>;
   toggleTaskCompletion: (taskId: number) => Promise<void>;
-  deleteTask: (taskId: number) => Promise<void>;
+  updateTask: (
+    taskId: number,
+    payload: Pick<Task, 'title' | 'description'>,
+  ) => Promise<boolean>;
+  deleteTask: (taskId: number) => Promise<boolean>;
   clearSuccessMessage: () => void;
 }
 
@@ -118,9 +122,36 @@ export const useTasksStore = create<TasksState>((set, get) => ({
     set({ isLoading: true, error: null, successMessage: null });
     try {
       await apiClient.delete(`${TASKS_ENDPOINT}/${taskId}`);
-      set({ tasks: get().tasks.filter((task) => task.id !== taskId) });
+      set({
+        tasks: get().tasks.filter((task) => task.id !== taskId),
+        successMessage: 'Task deleted successfully.',
+      });
+      return true;
     } catch (err) {
       set({ error: getErrorMessage(err) });
+      return false;
+    } finally {
+      set({ isLoading: false });
+    }
+  },
+
+  async updateTask(taskId, payload) {
+    set({ isLoading: true, error: null, successMessage: null });
+    try {
+      const { data } = await apiClient.patch<Task>(
+        `${TASKS_ENDPOINT}/${taskId}`,
+        payload,
+      );
+      set({
+        tasks: get().tasks.map((current) =>
+          current.id === taskId ? data : current,
+        ),
+        successMessage: 'Task updated successfully.',
+      });
+      return true;
+    } catch (err) {
+      set({ error: getErrorMessage(err) });
+      return false;
     } finally {
       set({ isLoading: false });
     }
