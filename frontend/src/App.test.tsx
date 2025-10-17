@@ -147,6 +147,8 @@ describe('App', () => {
 
     renderApp();
 
+    fireEvent.click(screen.getByRole('button', { name: /Create Task/i }));
+
     const titleInput = screen.getByLabelText(
       /Task title/i,
     ) as HTMLInputElement;
@@ -177,6 +179,8 @@ describe('App', () => {
     store.mocks.reset({ tasks: [] });
 
     const renderResult = renderApp();
+
+    await user.click(screen.getByRole('button', { name: /Create Task/i }));
 
     store.mocks.createTaskMock.mockImplementation(async () => {
       store.mocks.reset({
