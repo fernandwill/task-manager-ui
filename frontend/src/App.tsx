@@ -17,6 +17,7 @@ import { SyntheticEvent, useEffect, useMemo, useState } from 'react';
 import ReportDownloadButton from './components/ReportDownloadButton';
 import TaskForm from './components/TaskForm';
 import TaskList from './components/TaskList';
+import TaskStatusPieChart from './components/TaskStatusPieChart';
 import { useTasksStore } from './store/tasksStore';
 import { useColorMode } from './theme/AppThemeProvider';
 
@@ -75,17 +76,12 @@ const App = () => {
 
   type TaskTab = 'inProgress' | 'completed';
   const [activeTab, setActiveTab] = useState<TaskTab>('inProgress');
-  const [isCreateFormOpen, setIsCreateFormOpen] = useState(false);
 
   const handleTabChange = (
     _: SyntheticEvent,
     newValue: TaskTab,
   ) => {
     setActiveTab(newValue);
-  };
-
-  const handleOpenCreateForm = () => {
-    setIsCreateFormOpen(true);
   };
 
   const isLight = theme.palette.mode === 'light';
@@ -161,21 +157,32 @@ const App = () => {
                 Streamline tasks in a focused workspace with muted tones and
                 zero distractions.
               </Typography>
-              <Stack direction="row" spacing={1} flexWrap="wrap">
-                <Chip
-                  label={`${stats.total} Total`}
-                  variant="outlined"
-                  sx={{ borderColor: borderStrong }}
-                />
-                <Chip
-                  label={`${stats.completed} Completed`}
-                  variant="outlined"
-                  sx={{ borderColor: borderStrong }}
-                />
-                <Chip
-                  label={`${stats.inProgress} In progress`}
-                  variant="outlined"
-                  sx={{ borderColor: borderStrong }}
+              <Stack
+                direction={{ xs: 'column', md: 'row' }}
+                spacing={3}
+                alignItems={{ md: 'center' }}
+                justifyContent="space-between"
+              >
+                <Stack direction="row" spacing={1} flexWrap="wrap">
+                  <Chip
+                    label={`${stats.total} Total`}
+                    variant="outlined"
+                    sx={{ borderColor: borderStrong }}
+                  />
+                  <Chip
+                    label={`${stats.completed} Completed`}
+                    variant="outlined"
+                    sx={{ borderColor: borderStrong }}
+                  />
+                  <Chip
+                    label={`${stats.inProgress} In progress`}
+                    variant="outlined"
+                    sx={{ borderColor: borderStrong }}
+                  />
+                </Stack>
+                <TaskStatusPieChart
+                  completed={stats.completed}
+                  inProgress={stats.inProgress}
                 />
               </Stack>
             </Paper>
@@ -200,22 +207,10 @@ const App = () => {
               >
                 Quick add
               </Typography>
-              {isCreateFormOpen ? (
-                <TaskForm
-                  onSubmit={(payload) => void createTask(payload)}
-                  isSubmitting={isLoading}
-                  autoFocusTitle
-                />
-              ) : (
-                <Button
-                  variant="contained"
-                  size="large"
-                  onClick={handleOpenCreateForm}
-                  sx={{ alignSelf: { xs: 'stretch', sm: 'flex-start' } }}
-                >
-                  Create Task
-                </Button>
-              )}
+              <TaskForm
+                onSubmit={(payload) => void createTask(payload)}
+                isSubmitting={isLoading}
+              />
             </Paper>
           </Box>
 
