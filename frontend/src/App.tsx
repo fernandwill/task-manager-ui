@@ -13,6 +13,8 @@ import {
   alpha,
   useTheme,
 } from '@mui/material';
+import DarkModeOutlinedIcon from '@mui/icons-material/DarkModeOutlined';
+import LightbulbOutlinedIcon from '@mui/icons-material/LightbulbOutlined';
 import { SyntheticEvent, useEffect, useMemo, useState } from 'react';
 import ReportDownloadButton from './components/ReportDownloadButton';
 import TaskForm from './components/TaskForm';
@@ -101,6 +103,12 @@ const App = () => {
     ? alpha(theme.palette.text.primary, 0.03)
     : alpha(theme.palette.common.white, 0.04);
 
+  const statChips = [
+    { label: 'Total', value: stats.total },
+    { label: 'Completed', value: stats.completed },
+    { label: 'In progress', value: stats.inProgress },
+  ].filter((chip) => chip.value > 0);
+
   return (
     <Box
       sx={{
@@ -122,11 +130,59 @@ const App = () => {
                 borderColor: borderSoft,
                 color: 'inherit',
                 letterSpacing: '0.12em',
-                textTransform: 'uppercase',
+                minWidth: 0,
+                px: 1.5,
                 '&:hover': { borderColor: borderStrong },
               }}
             >
-              Toggle theme
+              <Box
+                sx={{
+                  position: 'relative',
+                  width: 24,
+                  height: 24,
+                  display: 'inline-flex',
+                  alignItems: 'center',
+                  justifyContent: 'center',
+                }}
+              >
+                <LightbulbOutlinedIcon
+                  sx={{
+                    position: 'absolute',
+                    inset: 0,
+                    opacity: isLight ? 1 : 0,
+                    transform: isLight
+                      ? 'scale(1) rotate(0deg)'
+                      : 'scale(0.6) rotate(-45deg)',
+                    transition: 'opacity 0.3s ease, transform 0.3s ease',
+                  }}
+                />
+                <DarkModeOutlinedIcon
+                  sx={{
+                    position: 'absolute',
+                    inset: 0,
+                    opacity: isLight ? 0 : 1,
+                    transform: isLight
+                      ? 'scale(0.6) rotate(45deg)'
+                      : 'scale(1) rotate(0deg)',
+                    transition: 'opacity 0.3s ease, transform 0.3s ease',
+                  }}
+                />
+              </Box>
+              <Typography
+                component="span"
+                sx={{
+                  position: 'absolute',
+                  width: 1,
+                  height: 1,
+                  padding: 0,
+                  margin: -1,
+                  overflow: 'hidden',
+                  clip: 'rect(0, 0, 0, 0)',
+                  border: 0,
+                }}
+              >
+                Toggle theme
+              </Typography>
             </Button>
           </Box>
           <Box
@@ -164,21 +220,14 @@ const App = () => {
                 justifyContent="space-between"
               >
                 <Stack direction="row" spacing={1} flexWrap="wrap">
-                  <Chip
-                    label={`${stats.total} Total`}
-                    variant="outlined"
-                    sx={{ borderColor: borderStrong }}
-                  />
-                  <Chip
-                    label={`${stats.completed} Completed`}
-                    variant="outlined"
-                    sx={{ borderColor: borderStrong }}
-                  />
-                  <Chip
-                    label={`${stats.inProgress} In progress`}
-                    variant="outlined"
-                    sx={{ borderColor: borderStrong }}
-                  />
+                  {statChips.map((chip) => (
+                    <Chip
+                      key={chip.label}
+                      label={`${chip.value} ${chip.label}`}
+                      variant="outlined"
+                      sx={{ borderColor: borderStrong }}
+                    />
+                  ))}
                 </Stack>
                 <TaskStatusPieChart
                   completed={stats.completed}
