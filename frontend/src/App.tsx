@@ -205,7 +205,7 @@ const App = () => {
                 mb={1.5}
                 sx={{ textTransform: 'uppercase', letterSpacing: '0.12em' }}
               >
-                Quick add
+                CREATE YOUR TASK FOR THE DAY
               </Typography>
               <TaskForm
                 onSubmit={(payload) => void createTask(payload)}
