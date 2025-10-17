@@ -37,3 +37,5 @@ Task Features
 ○ Generate a PDF with all current tasks (title, description, status)
 ○ Allow user to download it
 ○ Optional: Include timestamp and app name in header
+
+4. Deploy the app to Vercel

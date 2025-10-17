@@ -41,8 +41,10 @@ export const useTasksStore = create<TasksState>((set, get) => ({
   async fetchTasks() {
     set({ isLoading: true, error: null });
     try {
-      const { data } = await apiClient.get<Task[] | { tasks?: Task[]; items?: Task[] }>(
-        '/tasks',
+      const { data } = await apiClient.get<
+        Task[] | { tasks?: Task[]; items?: Task[] }
+      >(
+        `${TASKS_ENDPOINT}/`,
       );
       const normalizedTasks = Array.isArray(data)
         ? data
@@ -63,7 +65,10 @@ export const useTasksStore = create<TasksState>((set, get) => ({
   async createTask(payload) {
     set({ isLoading: true, error: null });
     try {
-      const { data } = await apiClient.post<Task>('/tasks', payload);
+      const { data } = await apiClient.post<Task>(
+        `${TASKS_ENDPOINT}/`,
+        payload,
+      );
       set({ tasks: [...get().tasks, data] });
     } catch (err) {
       set({ error: getErrorMessage(err) });
@@ -82,9 +87,12 @@ export const useTasksStore = create<TasksState>((set, get) => ({
 
     set({ isLoading: true, error: null });
     try {
-      const { data } = await apiClient.patch<Task>(`/tasks/${taskId}`, {
-        completed: !task.completed,
-      });
+      const { data } = await apiClient.patch<Task>(
+        `${TASKS_ENDPOINT}/${taskId}`,
+        {
+          completed: !task.completed,
+        },
+      );
       set({
         tasks: get().tasks.map((current) =>
           current.id === taskId ? data : current,
@@ -100,7 +108,7 @@ export const useTasksStore = create<TasksState>((set, get) => ({
   async deleteTask(taskId) {
     set({ isLoading: true, error: null });
     try {
-      await apiClient.delete(`/tasks/${taskId}`);
+      await apiClient.delete(`${TASKS_ENDPOINT}/${taskId}`);
       set({ tasks: get().tasks.filter((task) => task.id !== taskId) });
     } catch (err) {
       set({ error: getErrorMessage(err) });
@@ -109,3 +117,4 @@ export const useTasksStore = create<TasksState>((set, get) => ({
     }
   },
 }));
+const TASKS_ENDPOINT = '/tasks';
