@@ -24,3 +24,7 @@ class Task(TaskBase):
 
   class Config:
     from_attributes = True
+
+
+class TaskReorder(BaseModel):
+  ids: list[int] = Field(..., min_length=0)

@@ -1,9 +1,9 @@
-from typing import Dict
+from typing import Dict, List
 
 from fastapi import FastAPI, HTTPException, Path
 from fastapi.middleware.cors import CORSMiddleware
 
-from .schemas import Task, TaskCreate, TaskUpdate
+from .schemas import Task, TaskCreate, TaskReorder, TaskUpdate
 
 app = FastAPI(title="Task Manager API")
 
@@ -16,6 +16,7 @@ app.add_middleware(
 )
 
 _tasks: Dict[int, Task] = {}
+_order: List[int] = []
 _counter = 0
 
 
