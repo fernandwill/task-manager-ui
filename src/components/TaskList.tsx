@@ -8,7 +8,7 @@ import {
   Typography,
 } from '@mui/material';
 import DeleteIcon from '@mui/icons-material/Delete';
-import { Task } from '../store/tasksStore';
+import type { Task } from '../store/tasksStore';
 
 interface TaskListProps {
   tasks: Task[];

@@ -2,10 +2,12 @@ import axios from 'axios';
 
 /**
  * Axios instance configured for the FastAPI backend.
- * Adjust the baseURL once the backend endpoint is known.
+ * Reads from Vite env variable and falls back to local default.
  */
 const apiClient = axios.create({
-  baseURL: '/api',
+  baseURL:
+    import.meta.env.VITE_API_BASE_URL ??
+    '/api',
   headers: {
     'Content-Type': 'application/json',
   },

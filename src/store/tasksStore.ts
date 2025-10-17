@@ -1,3 +1,4 @@
+import { AxiosError } from 'axios';
 import { create } from 'zustand';
 import apiClient from '../api/client';
 
@@ -7,6 +8,20 @@ export interface Task {
   description?: string;
   completed: boolean;
 }
+
+const getErrorMessage = (error: unknown) => {
+  if (error instanceof AxiosError) {
+    const message =
+      error.response?.data?.detail ??
+      error.response?.data?.message ??
+      error.message;
+    return Array.isArray(message) ? message.join(', ') : String(message);
+  }
+  if (error instanceof Error) {
+    return error.message;
+  }
+  return 'Unexpected error. Please try again.';
+};
 
 interface TasksState {
   tasks: Task[];
@@ -26,10 +41,20 @@ export const useTasksStore = create<TasksState>((set, get) => ({
   async fetchTasks() {
     set({ isLoading: true, error: null });
     try {
-      const { data } = await apiClient.get<Task[]>('/tasks');
-      set({ tasks: data });
+      const { data } = await apiClient.get<Task[] | { tasks?: Task[]; items?: Task[] }>(
+        '/tasks',
+      );
+      const normalizedTasks = Array.isArray(data)
+        ? data
+        : Array.isArray(data?.tasks)
+        ? data.tasks
+        : Array.isArray(data?.items)
+        ? data.items
+        : [];
+
+      set({ tasks: normalizedTasks });
     } catch (err) {
-      set({ error: 'Unable to fetch tasks. Please try again.' });
+      set({ error: getErrorMessage(err) });
     } finally {
       set({ isLoading: false });
     }
@@ -41,23 +66,32 @@ export const useTasksStore = create<TasksState>((set, get) => ({
       const { data } = await apiClient.post<Task>('/tasks', payload);
       set({ tasks: [...get().tasks, data] });
     } catch (err) {
-      set({ error: 'Unable to create task. Please try again.' });
+      set({ error: getErrorMessage(err) });
     } finally {
       set({ isLoading: false });
     }
   },
 
   async toggleTaskCompletion(taskId) {
+    const { tasks } = get();
+    const task = tasks.find((item) => item.id === taskId);
+    if (!task) {
+      set({ error: 'Task not found.' });
+      return;
+    }
+
     set({ isLoading: true, error: null });
     try {
-      const { data } = await apiClient.patch<Task>(`/tasks/${taskId}/toggle`);
+      const { data } = await apiClient.patch<Task>(`/tasks/${taskId}`, {
+        completed: !task.completed,
+      });
       set({
-        tasks: get().tasks.map((task) =>
-          task.id === taskId ? data : task,
+        tasks: get().tasks.map((current) =>
+          current.id === taskId ? data : current,
         ),
       });
     } catch (err) {
-      set({ error: 'Unable to update task. Please try again.' });
+      set({ error: getErrorMessage(err) });
     } finally {
       set({ isLoading: false });
     }
@@ -69,7 +103,7 @@ export const useTasksStore = create<TasksState>((set, get) => ({
       await apiClient.delete(`/tasks/${taskId}`);
       set({ tasks: get().tasks.filter((task) => task.id !== taskId) });
     } catch (err) {
-      set({ error: 'Unable to delete task. Please try again.' });
+      set({ error: getErrorMessage(err) });
     } finally {
       set({ isLoading: false });
     }

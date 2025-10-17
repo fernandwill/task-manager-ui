@@ -2,7 +2,7 @@ import { useState } from 'react';
 import { Button } from '@mui/material';
 import { Document, Page, Text, View, pdf } from '@react-pdf/renderer';
 import dayjs from 'dayjs';
-import { Task } from '../store/tasksStore';
+import type { Task } from '../store/tasksStore';
 
 interface ReportDownloadButtonProps {
   tasks: Task[];
