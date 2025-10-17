@@ -13,6 +13,7 @@ const storeMocks = vi.hoisted(() => {
   const createTaskMock = vi.fn().mockResolvedValue(undefined);
   const toggleTaskCompletionMock = vi.fn().mockResolvedValue(undefined);
   const deleteTaskMock = vi.fn().mockResolvedValue(undefined);
+  const clearSuccessMessageMock = vi.fn();
 
   type StoreState = {
     tasks: Array<{
@@ -23,10 +24,12 @@ const storeMocks = vi.hoisted(() => {
     }>;
     isLoading: boolean;
     error: string | null;
+    successMessage: string | null;
     fetchTasks: typeof fetchTasksMock;
     createTask: typeof createTaskMock;
     toggleTaskCompletion: typeof toggleTaskCompletionMock;
     deleteTask: typeof deleteTaskMock;
+    clearSuccessMessage: typeof clearSuccessMessageMock;
   };
 
   const baseState = (): StoreState => ({
@@ -41,10 +44,12 @@ const storeMocks = vi.hoisted(() => {
     ],
     isLoading: false,
     error: null,
+    successMessage: null,
     fetchTasks: fetchTasksMock,
     createTask: createTaskMock,
     toggleTaskCompletion: toggleTaskCompletionMock,
     deleteTask: deleteTaskMock,
+    clearSuccessMessage: clearSuccessMessageMock,
   });
 
   let state = baseState();
@@ -57,6 +62,7 @@ const storeMocks = vi.hoisted(() => {
       createTask: createTaskMock,
       toggleTaskCompletion: toggleTaskCompletionMock,
       deleteTask: deleteTaskMock,
+      clearSuccessMessage: clearSuccessMessageMock,
     };
   };
 
@@ -161,6 +167,37 @@ describe('App', () => {
     });
 
     expect(screen.getByLabelText(/Task title/i)).toHaveValue('');
+  });
+
+  it('shows a success alert when task creation succeeds', async () => {
+    const user = userEvent.setup();
+
+    store.mocks.reset({ tasks: [] });
+
+    const renderResult = renderApp();
+
+    store.mocks.createTaskMock.mockImplementation(async () => {
+      store.mocks.reset({
+        tasks: [],
+        successMessage: 'Task created successfully.',
+      });
+
+      renderResult.rerender(
+        <AppThemeProvider>
+          <App />
+        </AppThemeProvider>,
+      );
+    });
+
+    await user.type(screen.getByLabelText(/Task title/i), 'Ship UI');
+
+    await user.click(screen.getByRole('button', { name: /Create Task/i }));
+
+    await waitFor(() => {
+      expect(
+        screen.getByText(/Task created successfully\./i),
+      ).toBeInTheDocument();
+    });
   });
 
   it('toggles between light and dark modes', async () => {

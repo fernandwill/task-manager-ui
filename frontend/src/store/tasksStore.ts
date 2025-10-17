@@ -27,19 +27,25 @@ interface TasksState {
   tasks: Task[];
   isLoading: boolean;
   error: string | null;
+  successMessage: string | null;
   fetchTasks: () => Promise<void>;
   createTask: (payload: Pick<Task, 'title' | 'description'>) => Promise<void>;
   toggleTaskCompletion: (taskId: number) => Promise<void>;
   deleteTask: (taskId: number) => Promise<void>;
+  clearSuccessMessage: () => void;
 }
 
 export const useTasksStore = create<TasksState>((set, get) => ({
   tasks: [],
   isLoading: false,
   error: null,
+  successMessage: null,
+  clearSuccessMessage() {
+    set({ successMessage: null });
+  },
 
   async fetchTasks() {
-    set({ isLoading: true, error: null });
+    set({ isLoading: true, error: null, successMessage: null });
     try {
       const { data } = await apiClient.get<
         Task[] | { tasks?: Task[]; items?: Task[] }
@@ -63,13 +69,16 @@ export const useTasksStore = create<TasksState>((set, get) => ({
   },
 
   async createTask(payload) {
-    set({ isLoading: true, error: null });
+    set({ isLoading: true, error: null, successMessage: null });
     try {
       const { data } = await apiClient.post<Task>(
         `${TASKS_ENDPOINT}/`,
         payload,
       );
-      set({ tasks: [...get().tasks, data] });
+      set({
+        tasks: [...get().tasks, data],
+        successMessage: 'Task created successfully.',
+      });
     } catch (err) {
       set({ error: getErrorMessage(err) });
     } finally {
@@ -85,7 +94,7 @@ export const useTasksStore = create<TasksState>((set, get) => ({
       return;
     }
 
-    set({ isLoading: true, error: null });
+    set({ isLoading: true, error: null, successMessage: null });
     try {
       const { data } = await apiClient.patch<Task>(
         `${TASKS_ENDPOINT}/${taskId}`,
@@ -106,7 +115,7 @@ export const useTasksStore = create<TasksState>((set, get) => ({
   },
 
   async deleteTask(taskId) {
-    set({ isLoading: true, error: null });
+    set({ isLoading: true, error: null, successMessage: null });
     try {
       await apiClient.delete(`${TASKS_ENDPOINT}/${taskId}`);
       set({ tasks: get().tasks.filter((task) => task.id !== taskId) });

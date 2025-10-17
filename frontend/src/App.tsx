@@ -29,16 +29,34 @@ const App = () => {
   const tasks = useTasksStore((state) => state.tasks);
   const isLoading = useTasksStore((state) => state.isLoading);
   const error = useTasksStore((state) => state.error);
+  const successMessage = useTasksStore((state) => state.successMessage);
   const fetchTasks = useTasksStore((state) => state.fetchTasks);
   const createTask = useTasksStore((state) => state.createTask);
   const toggleTaskCompletion = useTasksStore(
     (state) => state.toggleTaskCompletion,
   );
   const deleteTask = useTasksStore((state) => state.deleteTask);
+  const clearSuccessMessage = useTasksStore(
+    (state) => state.clearSuccessMessage,
+  );
 
   useEffect(() => {
     void fetchTasks();
   }, [fetchTasks]);
+
+  useEffect(() => {
+    if (!successMessage) {
+      return;
+    }
+
+    const timeout = window.setTimeout(() => {
+      clearSuccessMessage();
+    }, 4000);
+
+    return () => {
+      window.clearTimeout(timeout);
+    };
+  }, [successMessage, clearSuccessMessage]);
 
   const stats = useMemo(() => {
     const total = tasks.length;
@@ -139,7 +157,18 @@ const App = () => {
             </Paper>
           </Box>
 
-          {error ? <Alert severity="error">{error}</Alert> : null}
+          <Stack spacing={2}>
+            {successMessage ? (
+              <Alert
+                severity="success"
+                onClose={clearSuccessMessage}
+                data-testid="success-alert"
+              >
+                {successMessage}
+              </Alert>
+            ) : null}
+            {error ? <Alert severity="error">{error}</Alert> : null}
+          </Stack>
 
           <Paper
             elevation={0}
