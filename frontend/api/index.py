@@ -5,13 +5,14 @@ from datetime import datetime, timezone
 from pathlib import Path
 from typing import Dict, List
 
-from fastapi import FastAPI, HTTPException, Path as PathParam
+from fastapi import APIRouter, FastAPI, HTTPException, Path as PathParam
 from fastapi.middleware.cors import CORSMiddleware
 from pydantic import ValidationError
 
 from .schemas import Task, TaskCreate, TaskReorder, TaskUpdate
 
 app = FastAPI(title="Task Manager API")
+tasks_router = APIRouter(prefix="/tasks")
 
 app.add_middleware(
     CORSMiddleware,
@@ -133,7 +134,10 @@ def startup_event() -> None:
     _load_state()
 
 
-@app.get("/tasks/", response_model=list[Task])
+# Register routes on the router so we can mount them under multiple prefixes.
+
+
+@tasks_router.get("/", response_model=list[Task])
 def list_tasks() -> list[Task]:
     ordered_tasks = [_tasks[task_id] for task_id in _order if task_id in _tasks]
 
@@ -144,7 +148,7 @@ def list_tasks() -> list[Task]:
     return ordered_tasks
 
 
-@app.post("/tasks/", response_model=Task, status_code=201)
+@tasks_router.post("/", response_model=Task, status_code=201)
 def create_task(payload: TaskCreate) -> Task:
     task_id = _next_id()
     now = datetime.now(timezone.utc)
@@ -169,7 +173,7 @@ def create_task(payload: TaskCreate) -> Task:
     return task
 
 
-@app.patch("/tasks/{task_id}", response_model=Task)
+@tasks_router.patch("/{task_id}", response_model=Task)
 def update_task(
     payload: TaskUpdate,
     task_id: int = PathParam(..., ge=1),
@@ -195,7 +199,7 @@ def update_task(
     return updated
 
 
-@app.delete("/tasks/{task_id}", status_code=204)
+@tasks_router.delete("/{task_id}", status_code=204)
 def delete_task(task_id: int = PathParam(..., ge=1)) -> None:
     if task_id not in _tasks:
         raise HTTPException(status_code=404, detail="Task not found")
@@ -213,7 +217,7 @@ def delete_task(task_id: int = PathParam(..., ge=1)) -> None:
         raise
 
 
-@app.post("/tasks/reorder", status_code=204)
+@tasks_router.post("/reorder", status_code=204)
 def reorder_tasks(payload: TaskReorder) -> None:
     ids = payload.ids
 
@@ -232,6 +236,10 @@ def reorder_tasks(payload: TaskReorder) -> None:
         _order.clear()
         _order.extend(previous_order)
         raise
+
+
+app.include_router(tasks_router)
+app.include_router(tasks_router, prefix="/api")
 
 
 # Ensure state is loaded when the module is imported.
