@@ -145,6 +145,10 @@ const App = () => {
     () => inProgressTasks.slice(0, 3),
     [inProgressTasks],
   );
+  const remainingTaskCount = Math.max(
+    0,
+    inProgressTasks.length - upcomingTasks.length,
+  );
   const completedTasks = useMemo(
     () => tasks.filter((task) => task.completed),
     [tasks],
@@ -366,62 +370,75 @@ const App = () => {
                         Up next
                       </Typography>
                       {upcomingTasks.length ? (
-                        <List dense disablePadding sx={{ m: 0 }}>
-                          {upcomingTasks.map((task) => (
-                            <ListItem
-                              key={task.id}
-                              disableGutters
-                              sx={{
-                                px: 0,
-                                py: 0.5,
-                                borderBottom: `1px solid ${borderSoft}`,
-                                '&:last-of-type': { borderBottom: 'none' },
-                              }}
-                            >
-                              <ListItemText
-                                primary={
-                                  <Typography
-                                    variant="body2"
-                                    fontWeight={600}
-                                    noWrap
-                                  >
-                                    {task.title}
-                                  </Typography>
-                                }
-                                secondary={
-                                  <Stack spacing={0.25}>
-                                    {task.description ? (
+                        <>
+                          <List dense disablePadding sx={{ m: 0 }}>
+                            {upcomingTasks.map((task) => (
+                              <ListItem
+                                key={task.id}
+                                disableGutters
+                                sx={{
+                                  px: 0,
+                                  py: 0.5,
+                                  borderBottom: `1px solid ${borderSoft}`,
+                                  '&:last-of-type': { borderBottom: 'none' },
+                                }}
+                              >
+                                <ListItemText
+                                  primary={
+                                    <Typography
+                                      variant="body2"
+                                      fontWeight={600}
+                                      noWrap
+                                    >
+                                      {task.title}
+                                    </Typography>
+                                  }
+                                  secondary={
+                                    <Stack spacing={0.25}>
+                                      {task.description ? (
+                                        <Typography
+                                          variant="caption"
+                                          color="text.secondary"
+                                          noWrap
+                                        >
+                                          {task.description}
+                                        </Typography>
+                                      ) : null}
                                       <Typography
                                         variant="caption"
                                         color="text.secondary"
-                                        noWrap
                                       >
-                                        {task.description}
+                                        Created: {formatTimestamp(task.created_at)}
                                       </Typography>
-                                    ) : null}
-                                    <Typography
-                                      variant="caption"
-                                      color="text.secondary"
-                                    >
-                                      Created: {formatTimestamp(task.created_at)}
-                                    </Typography>
-                                    <Typography
-                                      variant="caption"
-                                      color="text.secondary"
-                                    >
-                                      Completed:{' '}
-                                      {task.completed_at
-                                        ? formatTimestamp(task.completed_at)
-                                        : 'Pending'}
-                                    </Typography>
-                                  </Stack>
-                                }
-                                secondaryTypographyProps={{ component: 'div' }}
-                                sx={{ m: 0 }}
-                              />
-                            </ListItem>
-                          ))}
-                        </List>
+                                      <Typography
+                                        variant="caption"
+                                        color="text.secondary"
+                                      >
+                                        Completed:{' '}
+                                        {task.completed_at
+                                          ? formatTimestamp(task.completed_at)
+                                          : 'Pending'}
+                                      </Typography>
+                                    </Stack>
+                                  }
+                                  secondaryTypographyProps={{ component: 'div' }}
+                                  sx={{ m: 0 }}
+                                />
+                              </ListItem>
+                            ))}
+                          </List>
+                          {remainingTaskCount > 0 ? (
+                            <Typography
+                              variant="caption"
+                              color="text.secondary"
+                              sx={{ fontWeight: 600 }}
+                            >
+                              {`${remainingTaskCount} more ${
+                                remainingTaskCount === 1 ? 'task' : 'tasks'
+                              }...`}
+                            </Typography>
+                          ) : null}
+                        </>
                       ) : (
                         <Typography variant="body2" color="text.secondary">
                           You&apos;re all caught up. Add a new task to keep the
