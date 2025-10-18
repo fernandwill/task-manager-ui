@@ -5,6 +5,7 @@ import type { SnackbarCloseReason } from '@mui/material/Snackbar';
 export type NetworkStatusToastProps = {
   status: 'online' | 'offline';
   message: string | null;
+  tone?: 'success' | 'error';
   onClose: () => void;
 };
 
@@ -16,11 +17,13 @@ const NetworkStatusToast = ({
   status,
   message,
   onClose,
+  tone = 'success',
 }: NetworkStatusToastProps) => {
   const isOffline = status === 'offline';
   const open = isOffline || Boolean(message);
   const displayedMessage =
     message ?? (isOffline ? FALLBACK_OFFLINE_MESSAGE : '');
+  const severity = isOffline ? 'error' : tone;
 
   const handleClose = (
     _event: Event | SyntheticEvent,
@@ -41,7 +44,7 @@ const NetworkStatusToast = ({
       onClose={handleClose}
     >
       <Alert
-        severity={isOffline ? 'error' : 'success'}
+        severity={severity}
         variant="filled"
         sx={{
           minWidth: 320,

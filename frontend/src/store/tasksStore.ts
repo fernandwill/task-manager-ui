@@ -1,6 +1,12 @@
 import { AxiosError } from 'axios';
 import { create } from 'zustand';
 import apiClient from '../api/client';
+import {
+  NETWORK_RESTORED_MESSAGE,
+  TASK_CREATE_FAILURE_TOAST_MESSAGE,
+  TASK_DELETE_FAILURE_TOAST_MESSAGE,
+  TASK_UPDATE_FAILURE_TOAST_MESSAGE,
+} from '../constants/toastMessages';
 
 export interface Task {
   id: number;
@@ -25,7 +31,6 @@ const getErrorMessage = (error: unknown) => {
   return 'Unexpected error. Please try again.';
 };
 
-const NETWORK_RESTORED_MESSAGE = 'Network restored.';
 const DEFAULT_OFFLINE_MESSAGE =
   'Unable to reach the server. Some actions may be unavailable while offline.';
 
@@ -160,7 +165,7 @@ export const useTasksStore = create<TasksState>((set, get) => ({
           error: getErrorMessage(err),
           networkStatus: 'online',
           isNetworkError: false,
-          networkMessage: null,
+          networkMessage: TASK_CREATE_FAILURE_TOAST_MESSAGE,
         });
       }
     } finally {
@@ -240,7 +245,7 @@ export const useTasksStore = create<TasksState>((set, get) => ({
           error: getErrorMessage(err),
           networkStatus: 'online',
           isNetworkError: false,
-          networkMessage: null,
+          networkMessage: TASK_DELETE_FAILURE_TOAST_MESSAGE,
         });
       }
       return false;
@@ -280,7 +285,7 @@ export const useTasksStore = create<TasksState>((set, get) => ({
           error: getErrorMessage(err),
           networkStatus: 'online',
           isNetworkError: false,
-          networkMessage: null,
+          networkMessage: TASK_UPDATE_FAILURE_TOAST_MESSAGE,
         });
       }
       return false;
