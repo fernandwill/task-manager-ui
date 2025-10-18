@@ -35,6 +35,7 @@ import type { Task } from './store/tasksStore';
 import EditTaskDialog from './components/EditTaskDialog';
 import SuccessToast from './components/SuccessToast';
 import NetworkStatusToast from './components/NetworkStatusToast';
+import { NETWORK_RESTORED_MESSAGE } from './constants/toastMessages';
 
 const App = () => {
   const theme = useTheme();
@@ -141,6 +142,13 @@ const App = () => {
     () => tasks.filter((task) => task.completed),
     [tasks],
   );
+
+  const shouldShowErrorToast =
+    networkStatus === 'offline' ||
+    (Boolean(networkMessage) && networkMessage !== NETWORK_RESTORED_MESSAGE);
+  const networkToastTone: 'success' | 'error' = shouldShowErrorToast
+    ? 'error'
+    : 'success';
 
   type TaskTab = 'inProgress' | 'completed';
   const [activeTab, setActiveTab] = useState<TaskTab>('inProgress');
@@ -580,6 +588,7 @@ const App = () => {
       <NetworkStatusToast
         status={networkStatus}
         message={networkMessage}
+        tone={networkToastTone}
         onClose={clearNetworkMessage}
       />
     </Box>

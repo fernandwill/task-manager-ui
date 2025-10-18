@@ -8,6 +8,11 @@ import {
   vi,
 } from 'vitest';
 import dayjs from 'dayjs';
+import {
+  TASK_CREATE_FAILURE_TOAST_MESSAGE,
+  TASK_DELETE_FAILURE_TOAST_MESSAGE,
+  TASK_UPDATE_FAILURE_TOAST_MESSAGE,
+} from './constants/toastMessages';
 
 const storeMocks = vi.hoisted(() => {
   const fetchTasksMock = vi.fn().mockResolvedValue(undefined);
@@ -294,6 +299,40 @@ describe('App', () => {
     });
   });
 
+  it('shows an error toast when task creation fails', async () => {
+    const user = userEvent.setup();
+
+    store.mocks.reset({ tasks: [] });
+
+    const renderResult = renderApp();
+
+    store.mocks.createTaskMock.mockImplementation(async () => {
+      store.mocks.reset({
+        tasks: [],
+        error: 'Request failed with status code 500',
+        networkStatus: 'online',
+        networkMessage: TASK_CREATE_FAILURE_TOAST_MESSAGE,
+        isNetworkError: false,
+      });
+
+      renderResult.rerender(
+        <AppThemeProvider>
+          <App />
+        </AppThemeProvider>,
+      );
+    });
+
+    await user.type(screen.getByLabelText(/Task title/i), 'Ship UI');
+
+    await user.click(screen.getByRole('button', { name: /Create Task/i }));
+
+    await waitFor(() => {
+      expect(
+        screen.getByText(TASK_CREATE_FAILURE_TOAST_MESSAGE),
+      ).toBeInTheDocument();
+    });
+  });
+
   it('toggles between light and dark modes', async () => {
     const user = userEvent.setup();
 
@@ -332,6 +371,41 @@ describe('App', () => {
     });
   });
 
+  it('shows an error toast when task deletion fails', async () => {
+    const user = userEvent.setup();
+
+    const renderResult = renderApp();
+
+    store.mocks.deleteTaskMock.mockImplementation(async () => {
+      store.mocks.reset({
+        error: 'Request failed with status code 500',
+        networkStatus: 'online',
+        networkMessage: TASK_DELETE_FAILURE_TOAST_MESSAGE,
+        isNetworkError: false,
+      });
+
+      renderResult.rerender(
+        <AppThemeProvider>
+          <App />
+        </AppThemeProvider>,
+      );
+
+      return false;
+    });
+
+    await user.click(screen.getByRole('button', { name: /delete plan sprint/i }));
+
+    const dialog = screen.getByRole('dialog', { name: /delete task/i });
+
+    await user.click(within(dialog).getByRole('button', { name: /delete/i }));
+
+    await waitFor(() => {
+      expect(
+        screen.getByText(TASK_DELETE_FAILURE_TOAST_MESSAGE),
+      ).toBeInTheDocument();
+    });
+  });
+
   it('allows editing a task', async () => {
     const user = userEvent.setup();
 
@@ -361,6 +435,48 @@ describe('App', () => {
       expect(
         screen.queryByRole('dialog', { name: /edit task/i }),
       ).not.toBeInTheDocument();
+    });
+  }, 20000);
+
+  it('shows an error toast when task update fails', async () => {
+    const user = userEvent.setup();
+
+    const renderResult = renderApp();
+
+    store.mocks.updateTaskMock.mockImplementation(async () => {
+      store.mocks.reset({
+        error: 'Request failed with status code 500',
+        networkStatus: 'online',
+        networkMessage: TASK_UPDATE_FAILURE_TOAST_MESSAGE,
+        isNetworkError: false,
+      });
+
+      renderResult.rerender(
+        <AppThemeProvider>
+          <App />
+        </AppThemeProvider>,
+      );
+
+      return false;
+    });
+
+    await user.click(screen.getByRole('button', { name: /edit plan sprint/i }));
+
+    const dialog = screen.getByRole('dialog', { name: /edit task/i });
+    const titleInput = within(dialog).getByLabelText(/task title/i);
+    const descriptionInput = within(dialog).getByLabelText(/description/i);
+
+    await user.clear(titleInput);
+    await user.type(titleInput, 'Plan sprint v2');
+    await user.clear(descriptionInput);
+    await user.type(descriptionInput, 'Refine sprint goals');
+
+    await user.click(within(dialog).getByRole('button', { name: /save changes/i }));
+
+    await waitFor(() => {
+      expect(
+        screen.getByText(TASK_UPDATE_FAILURE_TOAST_MESSAGE),
+      ).toBeInTheDocument();
     });
   }, 20000);
 
