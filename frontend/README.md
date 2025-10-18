@@ -1,3 +1,7 @@
+# Task Manager Frontend
+
+This Vite-powered React client talks to the FastAPI serverless endpoint that lives alongside it in `api/index.py`. For local development, copy `.env.development` to `.env.development.local` and point `VITE_API_BASE_URL` to your local FastAPI instance or leave it unset to target the Vercel function.
+
 # React + TypeScript + Vite
 
 This template provides a minimal setup to get React working in Vite with HMR and some ESLint rules.
