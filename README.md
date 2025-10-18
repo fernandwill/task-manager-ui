@@ -31,10 +31,15 @@ cd frontend
 npm install
 npm run dev
 ```
-Create a `.env.local` (or `.env`) file if you need to point the UI at a different backend:
+Copy `frontend/.env.local.example` to `frontend/.env.local` if you need to point the UI at a different backend:
+```
+cp frontend/.env.local.example frontend/.env.local
+```
+Then adjust the value as needed:
 ```
 VITE_API_BASE_URL=http://localhost:8000/api
 ```
+Avoid committing `.env` files so production builds on Vercel continue to use the default relative `/api` path.
 The development server runs on `http://localhost:5173` and proxies API requests to the FastAPI service when the base URL is set to `/api`.
 
 ## Available API endpoints
