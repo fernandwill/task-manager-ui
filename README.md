@@ -15,6 +15,10 @@ Task Manager UI is a small full-stack project that combines a FastAPI backend wi
 - `frontend/` - Vite-powered React app styled with Material UI, Zustand state management, and axios for API calls.
 - `frontend/api/` - Vercel Serverless Function that bundles the FastAPI routes for production deployments on Vercel.
 
+Both `fastapi-backend/app/tasks.json` and `frontend/api/tasks.json` ship with a small set of sample tasks so the UI has content
+immediately after installation. To start from a clean slate you can delete these files entirely or overwrite them with a
+minimal JSON structure such as `[]` before launching the app. The backend will recreate the files as you add new tasks.
+
 ## Getting Started on Windows
 ### 1. Run the FastAPI Service (optional for local development)
 ```
