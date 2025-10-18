@@ -7,6 +7,7 @@ import {
   it,
   vi,
 } from 'vitest';
+import dayjs from 'dayjs';
 
 const storeMocks = vi.hoisted(() => {
   const fetchTasksMock = vi.fn().mockResolvedValue(undefined);
@@ -23,6 +24,8 @@ const storeMocks = vi.hoisted(() => {
       title: string;
       description?: string;
       completed: boolean;
+      created_at: string;
+      completed_at: string | null;
     }>;
     isLoading: boolean;
     error: string | null;
@@ -43,8 +46,16 @@ const storeMocks = vi.hoisted(() => {
         title: 'Plan sprint',
         description: 'Outline deliverables for next release',
         completed: false,
+        created_at: '2024-01-10T14:30:00.000Z',
+        completed_at: null,
       },
-      { id: 2, title: 'Review pull requests', completed: true },
+      {
+        id: 2,
+        title: 'Review pull requests',
+        completed: true,
+        created_at: '2024-01-08T09:15:00.000Z',
+        completed_at: '2024-01-09T17:45:00.000Z',
+      },
     ],
     isLoading: false,
     error: null,
@@ -109,6 +120,9 @@ type MockedStoreHook = typeof useTasksStore & {
   mocks: typeof storeMocks;
 };
 
+const formatTimestamp = (isoString: string) =>
+  dayjs(isoString).format('MMM D, YYYY h:mm A');
+
 describe('App', () => {
   const store = useTasksStore as MockedStoreHook;
 
@@ -129,7 +143,11 @@ describe('App', () => {
     renderApp();
 
     expect(store.mocks.fetchTasksMock).toHaveBeenCalledTimes(1);
-    expect(screen.getByText(/Plan sprint/i)).toBeInTheDocument();
+    expect(screen.getAllByText(/Plan sprint/i).length).toBeGreaterThan(0);
+
+    const createdLabel = `Created: ${formatTimestamp('2024-01-10T14:30:00.000Z')}`;
+    expect(screen.getAllByText(createdLabel).length).toBeGreaterThan(1);
+    expect(screen.getAllByText('Completed: Pending').length).toBeGreaterThan(1);
 
     const markDoneButton = screen.getByRole('button', {
       name: /mark plan sprint as done/i,
@@ -147,6 +165,9 @@ describe('App', () => {
       name: /completed \(1\)/i,
     });
     await user.click(completedTab);
+
+    const completedLabel = `Completed: ${formatTimestamp('2024-01-09T17:45:00.000Z')}`;
+    expect(screen.getByText(completedLabel)).toBeInTheDocument();
 
     const markInProgressButton = screen.getByRole('button', {
       name: /mark review pull requests as in progress/i,
