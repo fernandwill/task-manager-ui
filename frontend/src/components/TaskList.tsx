@@ -11,6 +11,7 @@ import {
   useTheme,
 } from '@mui/material';
 import AssignmentTurnedInIcon from '@mui/icons-material/AssignmentTurnedIn';
+import CheckCircleIcon from '@mui/icons-material/CheckCircle';
 import DeleteIcon from '@mui/icons-material/Delete';
 import EditIcon from '@mui/icons-material/Edit';
 import {
@@ -191,7 +192,7 @@ const SortableTaskCard = ({
   const formattedCreated = dayjs(task.created_at).format(TIMESTAMP_FORMAT);
   const formattedCompleted = task.completed_at
     ? dayjs(task.completed_at).format(TIMESTAMP_FORMAT)
-    : 'Pending';
+    : null;
   const {
     attributes,
     listeners,
@@ -247,6 +248,22 @@ const SortableTaskCard = ({
         >
           {task.title}
         </Typography>
+        <Stack spacing={0.25}>
+          <Typography variant="caption" color="text.secondary">
+            Created on {formattedCreated}
+          </Typography>
+          {formattedCompleted ? (
+            <Stack direction="row" spacing={0.5} alignItems="center">
+              <CheckCircleIcon
+                fontSize="small"
+                sx={{ color: theme.palette.success.main }}
+              />
+              <Typography variant="caption" color="text.secondary">
+                Completed on {formattedCompleted}
+              </Typography>
+            </Stack>
+          ) : null}
+        </Stack>
         {task.description ? (
           <Typography
             variant="body2"
@@ -256,14 +273,6 @@ const SortableTaskCard = ({
             {task.description}
           </Typography>
         ) : null}
-        <Stack spacing={0.25}>
-          <Typography variant="caption" color="text.secondary">
-            Created: {formattedCreated}
-          </Typography>
-          <Typography variant="caption" color="text.secondary">
-            Completed: {formattedCompleted}
-          </Typography>
-        </Stack>
       </Stack>
 
       <Box sx={{ flexGrow: 1 }} />
