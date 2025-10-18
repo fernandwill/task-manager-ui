@@ -1,4 +1,4 @@
-export const NETWORK_RESTORED_MESSAGE = 'Network restored.';
+export const NETWORK_RESTORED_MESSAGE = 'Connected to network';
 
 export const TASK_CREATE_FAILURE_TOAST_MESSAGE =
   'Failed to create task.';
