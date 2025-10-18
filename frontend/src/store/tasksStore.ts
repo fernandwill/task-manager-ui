@@ -1,5 +1,5 @@
 import { AxiosError } from 'axios';
-import { create } from 'zustand';
+import { create, type StoreApi } from 'zustand';
 import apiClient from '../api/client';
 import {
   NETWORK_RESTORED_MESSAGE,
@@ -78,6 +78,57 @@ interface TasksState {
   clearNetworkMessage: () => void;
 }
 
+type SetState = StoreApi<TasksState>['setState'];
+
+const startRequest = (set: SetState) => {
+  set({ isLoading: true, error: null, successMessage: null });
+};
+
+const markStoreOnline = (
+  set: SetState,
+  updater?: (state: TasksState) => Partial<TasksState>,
+) => {
+  set((state) => ({
+    ...(updater ? updater(state) : {}),
+    networkStatus: 'online',
+    isNetworkError: false,
+    networkMessage:
+      state.networkStatus === 'offline' ? NETWORK_RESTORED_MESSAGE : null,
+  }));
+};
+
+const handleRequestError = (
+  set: SetState,
+  error: unknown,
+  {
+    nonNetworkMessage = null,
+    networkState,
+    nonNetworkState,
+  }: {
+    nonNetworkMessage?: string | null;
+    networkState?: Partial<TasksState>;
+    nonNetworkState?: Partial<TasksState>;
+  } = {},
+) => {
+  if (isAxiosNetworkError(error)) {
+    set({
+      ...networkState,
+      error: getErrorMessage(error),
+      networkStatus: 'offline',
+      isNetworkError: true,
+      networkMessage: getOfflineToastMessage(error),
+    });
+  } else {
+    set({
+      ...nonNetworkState,
+      error: getErrorMessage(error),
+      networkStatus: 'online',
+      isNetworkError: false,
+      networkMessage: nonNetworkMessage ?? null,
+    });
+  }
+};
+
 export const useTasksStore = create<TasksState>((set, get) => ({
   tasks: [],
   isLoading: false,
@@ -94,7 +145,7 @@ export const useTasksStore = create<TasksState>((set, get) => ({
   },
 
   async fetchTasks() {
-    set({ isLoading: true, error: null, successMessage: null });
+    startRequest(set);
     try {
       const { data } = await apiClient.get<
         Task[] | { tasks?: Task[]; items?: Task[] }
@@ -109,65 +160,31 @@ export const useTasksStore = create<TasksState>((set, get) => ({
         ? data.items
         : [];
 
-      set((state) => ({
+      markStoreOnline(set, () => ({
         tasks: normalizedTasks,
-        networkStatus: 'online',
-        isNetworkError: false,
-        networkMessage:
-          state.networkStatus === 'offline' ? NETWORK_RESTORED_MESSAGE : null,
       }));
     } catch (err) {
-      if (isAxiosNetworkError(err)) {
-        set({
-          error: getErrorMessage(err),
-          networkStatus: 'offline',
-          isNetworkError: true,
-          networkMessage: getOfflineToastMessage(err),
-        });
-      } else {
-        set({
-          error: getErrorMessage(err),
-          networkStatus: 'online',
-          isNetworkError: false,
-          networkMessage: null,
-        });
-      }
+      handleRequestError(set, err);
     } finally {
       set({ isLoading: false });
     }
   },
 
   async createTask(payload) {
-    set({ isLoading: true, error: null, successMessage: null });
+    startRequest(set);
     try {
       const { data } = await apiClient.post<Task>(
         `${TASKS_ENDPOINT}/`,
         payload,
       );
-      set((state) => ({
+      markStoreOnline(set, (state) => ({
         tasks: [...state.tasks, data],
         successMessage: 'Task created successfully.',
-        networkStatus: 'online',
-        isNetworkError: false,
-        networkMessage:
-          state.networkStatus === 'offline' ? NETWORK_RESTORED_MESSAGE : null,
       }));
     } catch (err) {
-      if (isAxiosNetworkError(err)) {
-        set({
-          error: getErrorMessage(err),
-          networkStatus: 'offline',
-          isNetworkError: true,
-          networkMessage: getOfflineToastMessage(err),
-        });
-      } else {
-        set({
-          error: getErrorMessage(err),
-          networkStatus: 'online',
-          isNetworkError: false,
-          networkMessage: TASK_CREATE_FAILURE_TOAST_MESSAGE,
-        });
-      }
+      handleRequestError(set, err, {
+        nonNetworkMessage: TASK_CREATE_FAILURE_TOAST_MESSAGE,
+      });
     } finally {
       set({ isLoading: false });
     }
@@ -181,7 +198,7 @@ export const useTasksStore = create<TasksState>((set, get) => ({
       return;
     }
 
-    set({ isLoading: true, error: null, successMessage: null });
+    startRequest(set);
     try {
       const { data } = await apiClient.patch<Task>(
         `${TASKS_ENDPOINT}/${taskId}`,
@@ -189,65 +206,31 @@ export const useTasksStore = create<TasksState>((set, get) => ({
           completed: !task.completed,
         },
       );
-      set((state) => ({
+      markStoreOnline(set, (state) => ({
         tasks: state.tasks.map((current) =>
           current.id === taskId ? data : current,
         ),
-        networkStatus: 'online',
-        isNetworkError: false,
-        networkMessage:
-          state.networkStatus === 'offline' ? NETWORK_RESTORED_MESSAGE : null,
       }));
     } catch (err) {
-      if (isAxiosNetworkError(err)) {
-        set({
-          error: getErrorMessage(err),
-          networkStatus: 'offline',
-          isNetworkError: true,
-          networkMessage: getOfflineToastMessage(err),
-        });
-      } else {
-        set({
-          error: getErrorMessage(err),
-          networkStatus: 'online',
-          isNetworkError: false,
-          networkMessage: null,
-        });
-      }
+      handleRequestError(set, err);
     } finally {
       set({ isLoading: false });
     }
   },
 
   async deleteTask(taskId) {
-    set({ isLoading: true, error: null, successMessage: null });
+    startRequest(set);
     try {
       await apiClient.delete(`${TASKS_ENDPOINT}/${taskId}`);
-      set((state) => ({
+      markStoreOnline(set, (state) => ({
         tasks: state.tasks.filter((task) => task.id !== taskId),
         successMessage: 'Task deleted successfully.',
-        networkStatus: 'online',
-        isNetworkError: false,
-        networkMessage:
-          state.networkStatus === 'offline' ? NETWORK_RESTORED_MESSAGE : null,
       }));
       return true;
     } catch (err) {
-      if (isAxiosNetworkError(err)) {
-        set({
-          error: getErrorMessage(err),
-          networkStatus: 'offline',
-          isNetworkError: true,
-          networkMessage: getOfflineToastMessage(err),
-        });
-      } else {
-        set({
-          error: getErrorMessage(err),
-          networkStatus: 'online',
-          isNetworkError: false,
-          networkMessage: TASK_DELETE_FAILURE_TOAST_MESSAGE,
-        });
-      }
+      handleRequestError(set, err, {
+        nonNetworkMessage: TASK_DELETE_FAILURE_TOAST_MESSAGE,
+      });
       return false;
     } finally {
       set({ isLoading: false });
@@ -255,39 +238,23 @@ export const useTasksStore = create<TasksState>((set, get) => ({
   },
 
   async updateTask(taskId, payload) {
-    set({ isLoading: true, error: null, successMessage: null });
+    startRequest(set);
     try {
       const { data } = await apiClient.patch<Task>(
         `${TASKS_ENDPOINT}/${taskId}`,
         payload,
       );
-      set((state) => ({
+      markStoreOnline(set, (state) => ({
         tasks: state.tasks.map((current) =>
           current.id === taskId ? data : current,
         ),
         successMessage: 'Task updated successfully.',
-        networkStatus: 'online',
-        isNetworkError: false,
-        networkMessage:
-          state.networkStatus === 'offline' ? NETWORK_RESTORED_MESSAGE : null,
       }));
       return true;
     } catch (err) {
-      if (isAxiosNetworkError(err)) {
-        set({
-          error: getErrorMessage(err),
-          networkStatus: 'offline',
-          isNetworkError: true,
-          networkMessage: getOfflineToastMessage(err),
-        });
-      } else {
-        set({
-          error: getErrorMessage(err),
-          networkStatus: 'online',
-          isNetworkError: false,
-          networkMessage: TASK_UPDATE_FAILURE_TOAST_MESSAGE,
-        });
-      }
+      handleRequestError(set, err, {
+        nonNetworkMessage: TASK_UPDATE_FAILURE_TOAST_MESSAGE,
+      });
       return false;
     } finally {
       set({ isLoading: false });
@@ -324,30 +291,12 @@ export const useTasksStore = create<TasksState>((set, get) => ({
       await apiClient.post(`${TASKS_ENDPOINT}/reorder`, {
         ids: merged.map((task) => task.id),
       });
-      set((state) => ({
-        networkStatus: 'online',
-        isNetworkError: false,
-        networkMessage:
-          state.networkStatus === 'offline' ? NETWORK_RESTORED_MESSAGE : null,
-      }));
+      markStoreOnline(set);
     } catch (err) {
-      if (isAxiosNetworkError(err)) {
-        set({
-          tasks: previousTasks,
-          error: getErrorMessage(err),
-          networkStatus: 'offline',
-          isNetworkError: true,
-          networkMessage: getOfflineToastMessage(err),
-        });
-      } else {
-        set({
-          tasks: previousTasks,
-          error: getErrorMessage(err),
-          networkStatus: 'online',
-          isNetworkError: false,
-          networkMessage: null,
-        });
-      }
+      handleRequestError(set, err, {
+        networkState: { tasks: previousTasks },
+        nonNetworkState: { tasks: previousTasks },
+      });
     }
   },
 }));
