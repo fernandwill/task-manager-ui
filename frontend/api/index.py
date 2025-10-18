@@ -133,7 +133,7 @@ def startup_event() -> None:
     _load_state()
 
 
-@app.get("/api/tasks/", response_model=list[Task])
+@app.get("/tasks/", response_model=list[Task])
 def list_tasks() -> list[Task]:
     ordered_tasks = [_tasks[task_id] for task_id in _order if task_id in _tasks]
 
@@ -144,7 +144,7 @@ def list_tasks() -> list[Task]:
     return ordered_tasks
 
 
-@app.post("/api/tasks/", response_model=Task, status_code=201)
+@app.post("/tasks/", response_model=Task, status_code=201)
 def create_task(payload: TaskCreate) -> Task:
     task_id = _next_id()
     now = datetime.now(timezone.utc)
@@ -169,7 +169,7 @@ def create_task(payload: TaskCreate) -> Task:
     return task
 
 
-@app.patch("/api/tasks/{task_id}", response_model=Task)
+@app.patch("/tasks/{task_id}", response_model=Task)
 def update_task(
     payload: TaskUpdate,
     task_id: int = PathParam(..., ge=1),
@@ -195,7 +195,7 @@ def update_task(
     return updated
 
 
-@app.delete("/api/tasks/{task_id}", status_code=204)
+@app.delete("/tasks/{task_id}", status_code=204)
 def delete_task(task_id: int = PathParam(..., ge=1)) -> None:
     if task_id not in _tasks:
         raise HTTPException(status_code=404, detail="Task not found")
@@ -213,7 +213,7 @@ def delete_task(task_id: int = PathParam(..., ge=1)) -> None:
         raise
 
 
-@app.post("/api/tasks/reorder", status_code=204)
+@app.post("/tasks/reorder", status_code=204)
 def reorder_tasks(payload: TaskReorder) -> None:
     ids = payload.ids
 
