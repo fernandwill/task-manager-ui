@@ -1,4 +1,5 @@
 # Task Manager UI
+<img width="1000" height="1000" alt="{2E096C21-4834-44ED-9804-7583E7AEC16F}" src="https://github.com/user-attachments/assets/159b13d4-716b-45c6-ae37-d6de99c83eac" />
 
 Task Manager UI is a small full-stack project that combines a FastAPI backend with a React + TypeScript frontend. Use it to capture daily work, track progress, and export summaries without relying on external services.
 
