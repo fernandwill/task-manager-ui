@@ -2,12 +2,18 @@ import {
   Alert,
   Box,
   Button,
+  Chip,
   CircularProgress,
   Container,
+  Divider,
   Dialog,
   DialogActions,
   DialogContent,
   DialogTitle,
+  LinearProgress,
+  List,
+  ListItem,
+  ListItemText,
   Paper,
   Stack,
   Tab,
@@ -24,7 +30,6 @@ import type { SyntheticEvent } from 'react';
 import ReportDownloadButton from './components/ReportDownloadButton';
 import TaskForm from './components/TaskForm';
 import TaskList from './components/TaskList';
-import TaskStatusPieChart from './components/TaskStatusPieChart';
 import { useTasksStore } from './store/tasksStore';
 import { useColorMode } from './theme/AppThemeProvider';
 import type { Task } from './store/tasksStore';
@@ -134,6 +139,10 @@ const App = () => {
   const inProgressTasks = useMemo(
     () => tasks.filter((task) => !task.completed),
     [tasks],
+  );
+  const upcomingTasks = useMemo(
+    () => inProgressTasks.slice(0, 3),
+    [inProgressTasks],
   );
   const completedTasks = useMemo(
     () => tasks.filter((task) => task.completed),
@@ -267,24 +276,141 @@ const App = () => {
                 borderColor: borderSoft,
               }}
             >
-              <Typography variant="h4" fontWeight={600}>
-                Minimal noir productivity
-              </Typography>
-              <Typography variant="body1" color="text.secondary">
-                Streamline tasks in a focused workspace with muted tones and
-                zero distractions.
-              </Typography>
-              <Box
-                sx={{
-                  display: 'flex',
-                  justifyContent: { xs: 'center', md: 'flex-end' },
-                }}
+              <Stack
+                direction={{ xs: 'column', md: 'row' }}
+                spacing={{ xs: 3, md: 4 }}
+                alignItems="stretch"
               >
-                <TaskStatusPieChart
-                  completed={stats.completed}
-                  inProgress={stats.inProgress}
-                />
-              </Box>
+                <Stack spacing={2.5} flex={1}>
+                  <Stack spacing={1}>
+                    <Typography variant="h4" fontWeight={600}>
+                      Minimal noir productivity
+                    </Typography>
+                    <Typography variant="body1" color="text.secondary">
+                      Streamline tasks in a focused workspace with muted tones
+                      and zero distractions.
+                    </Typography>
+                  </Stack>
+
+                  <Stack spacing={2.5}>
+                    <Stack spacing={1}>
+                      <Typography
+                        variant="subtitle2"
+                        color="text.secondary"
+                        sx={{ letterSpacing: '0.08em' }}
+                      >
+                        Today&apos;s snapshot
+                      </Typography>
+                      <Stack
+                        direction="row"
+                        spacing={1.5}
+                        flexWrap="wrap"
+                        useFlexGap
+                      >
+                        <Chip
+                          label={`Total · ${stats.total}`}
+                          variant="outlined"
+                          sx={{ fontWeight: 600 }}
+                        />
+                        <Chip
+                          label={`In progress · ${stats.inProgress}`}
+                          color="warning"
+                          variant="filled"
+                          sx={{ fontWeight: 600 }}
+                        />
+                        <Chip
+                          label={`Completed · ${stats.completed}`}
+                          color="success"
+                          variant="filled"
+                          sx={{ fontWeight: 600 }}
+                        />
+                      </Stack>
+                    </Stack>
+
+                    <Box>
+                      <Stack
+                        direction="row"
+                        justifyContent="space-between"
+                        alignItems="center"
+                        spacing={1}
+                      >
+                        <Typography
+                          variant="subtitle2"
+                          color="text.secondary"
+                          sx={{ letterSpacing: '0.08em' }}
+                        >
+                          Completion rate
+                        </Typography>
+                        <Typography variant="subtitle1" fontWeight={700}>
+                          {stats.completionRate}%
+                        </Typography>
+                      </Stack>
+                      <LinearProgress
+                        variant="determinate"
+                        value={stats.completionRate}
+                        sx={{ mt: 1, height: 8, borderRadius: 999 }}
+                      />
+                    </Box>
+
+                    <Divider flexItem sx={{ borderColor: borderSoft }} />
+
+                    <Stack spacing={1}>
+                      <Typography
+                        variant="subtitle2"
+                        color="text.secondary"
+                        sx={{ letterSpacing: '0.08em' }}
+                      >
+                        Up next
+                      </Typography>
+                      {upcomingTasks.length ? (
+                        <List dense disablePadding sx={{ m: 0 }}>
+                          {upcomingTasks.map((task) => (
+                            <ListItem
+                              key={task.id}
+                              disableGutters
+                              sx={{
+                                px: 0,
+                                py: 0.5,
+                                borderBottom: `1px solid ${borderSoft}`,
+                                '&:last-of-type': { borderBottom: 'none' },
+                              }}
+                            >
+                              <ListItemText
+                                primary={
+                                  <Typography
+                                    variant="body2"
+                                    fontWeight={600}
+                                    noWrap
+                                  >
+                                    {task.title}
+                                  </Typography>
+                                }
+                                secondary={
+                                  task.description ? (
+                                    <Typography
+                                      variant="caption"
+                                      color="text.secondary"
+                                      noWrap
+                                    >
+                                      {task.description}
+                                    </Typography>
+                                  ) : null
+                                }
+                                sx={{ m: 0 }}
+                              />
+                            </ListItem>
+                          ))}
+                        </List>
+                      ) : (
+                        <Typography variant="body2" color="text.secondary">
+                          You&apos;re all caught up. Add a new task to keep the
+                          momentum going.
+                        </Typography>
+                      )}
+                    </Stack>
+                  </Stack>
+                </Stack>
+              </Stack>
             </Paper>
             <Paper
               elevation={0}
