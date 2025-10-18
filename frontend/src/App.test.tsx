@@ -17,6 +17,7 @@ const storeMocks = vi.hoisted(() => {
   const updateTaskMock = vi.fn().mockResolvedValue(true);
   const clearSuccessMessageMock = vi.fn();
   const reorderTasksMock = vi.fn();
+  const clearNetworkMessageMock = vi.fn();
 
   type StoreState = {
     tasks: Array<{
@@ -30,6 +31,9 @@ const storeMocks = vi.hoisted(() => {
     isLoading: boolean;
     error: string | null;
     successMessage: string | null;
+    networkStatus: 'online' | 'offline';
+    networkMessage: string | null;
+    isNetworkError: boolean;
     fetchTasks: typeof fetchTasksMock;
     createTask: typeof createTaskMock;
     toggleTaskCompletion: typeof toggleTaskCompletionMock;
@@ -37,6 +41,7 @@ const storeMocks = vi.hoisted(() => {
     updateTask: typeof updateTaskMock;
     clearSuccessMessage: typeof clearSuccessMessageMock;
     reorderTasks: typeof reorderTasksMock;
+    clearNetworkMessage: typeof clearNetworkMessageMock;
   };
 
   const baseState = (): StoreState => ({
@@ -60,6 +65,9 @@ const storeMocks = vi.hoisted(() => {
     isLoading: false,
     error: null,
     successMessage: null,
+    networkStatus: 'online',
+    networkMessage: null,
+    isNetworkError: false,
     fetchTasks: fetchTasksMock,
     createTask: createTaskMock,
     toggleTaskCompletion: toggleTaskCompletionMock,
@@ -67,6 +75,7 @@ const storeMocks = vi.hoisted(() => {
     updateTask: updateTaskMock,
     clearSuccessMessage: clearSuccessMessageMock,
     reorderTasks: reorderTasksMock,
+    clearNetworkMessage: clearNetworkMessageMock,
   });
 
   let state = baseState();
@@ -82,6 +91,7 @@ const storeMocks = vi.hoisted(() => {
       updateTask: updateTaskMock,
       clearSuccessMessage: clearSuccessMessageMock,
       reorderTasks: reorderTasksMock,
+      clearNetworkMessage: clearNetworkMessageMock,
     };
   };
 
@@ -94,6 +104,7 @@ const storeMocks = vi.hoisted(() => {
     deleteTaskMock,
     updateTaskMock,
     reorderTasksMock,
+    clearNetworkMessageMock,
     reset,
     getState,
   };
@@ -199,6 +210,24 @@ describe('App', () => {
     expect(screen.getByRole('alert')).toHaveTextContent(
       'Unable to fetch tasks',
     );
+  });
+
+  it('shows a persistent network toast when offline and hides the inline error', () => {
+    store.mocks.reset({
+      tasks: [],
+      error: 'Unable to fetch tasks',
+      networkStatus: 'offline',
+      networkMessage: 'Connection lost. Trying to reconnect…',
+      isNetworkError: true,
+    });
+
+    renderApp();
+
+    expect(
+      screen.getByText(/Connection lost. Trying to reconnect…/i),
+    ).toBeInTheDocument();
+    expect(screen.queryByText('Unable to fetch tasks')).not.toBeInTheDocument();
+    expect(store.mocks.clearNetworkMessageMock).not.toHaveBeenCalled();
   });
 
   it('submits a new task via the creation form', async () => {
@@ -422,8 +451,8 @@ describe('App', () => {
 
     await waitFor(() => {
       expect(
-        document.querySelector('[aria-labelledby="edit-task-success-title"]'),
-      ).not.toBeNull();
+        screen.getByText(/Task updated successfully\./i),
+      ).toBeInTheDocument();
     });
   });
 });

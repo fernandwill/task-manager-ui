@@ -34,6 +34,7 @@ import { useColorMode } from './theme/AppThemeProvider';
 import type { Task } from './store/tasksStore';
 import EditTaskDialog from './components/EditTaskDialog';
 import SuccessToast from './components/SuccessToast';
+import NetworkStatusToast from './components/NetworkStatusToast';
 
 const App = () => {
   const theme = useTheme();
@@ -42,6 +43,9 @@ const App = () => {
   const isLoading = useTasksStore((state) => state.isLoading);
   const error = useTasksStore((state) => state.error);
   const successMessage = useTasksStore((state) => state.successMessage);
+  const networkStatus = useTasksStore((state) => state.networkStatus);
+  const networkMessage = useTasksStore((state) => state.networkMessage);
+  const isNetworkError = useTasksStore((state) => state.isNetworkError);
   const fetchTasks = useTasksStore((state) => state.fetchTasks);
   const createTask = useTasksStore((state) => state.createTask);
   const toggleTaskCompletion = useTasksStore(
@@ -51,6 +55,9 @@ const App = () => {
   const updateTask = useTasksStore((state) => state.updateTask);
   const clearSuccessMessage = useTasksStore(
     (state) => state.clearSuccessMessage,
+  );
+  const clearNetworkMessage = useTasksStore(
+    (state) => state.clearNetworkMessage,
   );
   const reorderTasks = useTasksStore((state) => state.reorderTasks);
   const [taskToDelete, setTaskToDelete] = useState<Task | null>(null);
@@ -439,7 +446,7 @@ const App = () => {
             </Paper>
           </Box>
 
-          {error ? (
+          {error && !isNetworkError ? (
             <Stack spacing={2}>
               <Alert severity="error">{error}</Alert>
             </Stack>
@@ -569,6 +576,11 @@ const App = () => {
         open={Boolean(successMessage)}
         message={successMessage ?? ''}
         onClose={clearSuccessMessage}
+      />
+      <NetworkStatusToast
+        status={networkStatus}
+        message={networkMessage}
+        onClose={clearNetworkMessage}
       />
     </Box>
   );
