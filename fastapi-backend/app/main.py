@@ -1,5 +1,6 @@
 import json
 import logging
+from datetime import datetime, timezone
 from pathlib import Path as FilePath
 from typing import Dict, List
 
@@ -36,7 +37,7 @@ def _persist_state() -> None:
     """Persist the current task state to disk."""
 
     data = {
-        "tasks": [task.model_dump() for task in _tasks.values()],
+        "tasks": [task.model_dump(mode="json") for task in _tasks.values()],
         "order": list(_order),
         "counter": _counter,
     }
@@ -72,8 +73,16 @@ def _load_state() -> None:
     loaded_tasks: Dict[int, Task] = {}
 
     for item in tasks_data:
+        item_data = dict(item)
+        if not item_data.get("created_at"):
+            item_data["created_at"] = datetime.now(timezone.utc).isoformat()
+        if item_data.get("completed"):
+            item_data.setdefault("completed_at", item_data["created_at"])
+        else:
+            item_data["completed_at"] = None
+
         try:
-            task = Task(**item)
+            task = Task(**item_data)
         except (TypeError, ValidationError):
             _logger.exception("Skipping invalid task entry in persisted data: %s", item)
             continue
@@ -111,7 +120,14 @@ def list_tasks() -> list[Task]:
 @app.post("/api/tasks/", response_model=Task, status_code=201)
 def create_task(payload: TaskCreate) -> Task:
     task_id = _next_id()
-    task = Task(id=task_id, completed=False, **payload.model_dump())
+    now = datetime.now(timezone.utc)
+    task = Task(
+        id=task_id,
+        completed=False,
+        created_at=now,
+        completed_at=None,
+        **payload.model_dump(),
+    )
     _tasks[task_id] = task
     _order.append(task_id)
     try:
@@ -136,6 +152,12 @@ def update_task(
 
     stored = _tasks[task_id]
     update_data = payload.model_dump(exclude_unset=True)
+    completed_flag = update_data.get("completed")
+    if completed_flag is not None:
+        if completed_flag and not stored.completed:
+            update_data["completed_at"] = datetime.now(timezone.utc)
+        elif not completed_flag and stored.completed:
+            update_data["completed_at"] = None
     updated = stored.model_copy(update=update_data)
     _tasks[task_id] = updated
     try:

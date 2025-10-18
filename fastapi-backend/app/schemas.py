@@ -1,6 +1,13 @@
+from datetime import datetime, timezone
 from typing import Optional
 
 from pydantic import BaseModel, Field
+
+
+def _utc_now() -> datetime:
+  """Return the current UTC time with timezone information."""
+
+  return datetime.now(timezone.utc)
 
 
 class TaskBase(BaseModel):
@@ -21,6 +28,8 @@ class TaskUpdate(BaseModel):
 class Task(TaskBase):
   id: int
   completed: bool = False
+  created_at: datetime = Field(default_factory=_utc_now)
+  completed_at: Optional[datetime] = None
 
   class Config:
     from_attributes = True
