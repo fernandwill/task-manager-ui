@@ -32,11 +32,13 @@ cd frontend
 npm install
 npm run dev
 ```
-For local development against the FastAPI server, copy `.env.development` to `.env.development.local` and adjust the base URL if needed:
+For local development against the FastAPI server, copy `.env.development` to `.env.development.local` and point the base URL directly at the FastAPI instance:
 ```
 VITE_API_BASE_URL=http://localhost:8000/api
 ```
-The development server runs on `http://localhost:5173` and proxies API requests to the FastAPI service when the base URL is set to `/api`.
+This ensures the Vite dev server issues API requests straight to your local FastAPI backend without relying on a proxy configuration. If you prefer to use a proxy instead, configure Vite's `server.proxy` setting to map `/api` to `http://localhost:8000`.
+
+> **Note:** The `/api` path prefix is reserved for the default Vercel Serverless Function deployment, so avoid pointing `VITE_API_BASE_URL` to `/api` during local development.
 
 ## Deploying to Vercel
 - Point the Vercel project root to the `frontend` directory.
