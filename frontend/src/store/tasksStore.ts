@@ -17,13 +17,60 @@ export interface Task {
   completed_at: string | null;
 }
 
+const appendCauseToMessage = (message: string | null, cause: string | null) => {
+  const trimmedMessage = message?.trim();
+  const trimmedCause = cause?.trim();
+
+  if (!trimmedMessage) {
+    return trimmedCause ?? '';
+  }
+
+  if (!trimmedCause) {
+    return trimmedMessage;
+  }
+
+  const normalizedMessage = trimmedMessage.toLowerCase();
+  const normalizedCause = trimmedCause.toLowerCase();
+
+  if (
+    normalizedMessage === normalizedCause ||
+    normalizedMessage.includes(normalizedCause)
+  ) {
+    return trimmedMessage;
+  }
+
+  const messageWithPeriod = /[.!?]$/.test(trimmedMessage)
+    ? trimmedMessage
+    : `${trimmedMessage}.`;
+
+  return `${messageWithPeriod} ${trimmedCause}`;
+};
+
+const normalizeErrorDetail = (detail: unknown): string | null => {
+  if (!detail) {
+    return null;
+  }
+
+  if (Array.isArray(detail)) {
+    return detail.map(String).join(', ');
+  }
+
+  return String(detail);
+};
+
 const getErrorMessage = (error: unknown) => {
   if (error instanceof AxiosError) {
-    const message =
-      error.response?.data?.detail ??
-      error.response?.data?.message ??
-      error.message;
-    return Array.isArray(message) ? message.join(', ') : String(message);
+    const responseDetail =
+      error.response?.data?.detail ?? error.response?.data?.message ?? null;
+    const normalizedDetail = normalizeErrorDetail(responseDetail);
+    const normalizedMessage = normalizeErrorDetail(error.message) ?? null;
+
+    const combinedMessage = appendCauseToMessage(
+      normalizedMessage,
+      normalizedDetail,
+    );
+
+    return combinedMessage || 'Unexpected error. Please try again.';
   }
   if (error instanceof Error) {
     return error.message;
