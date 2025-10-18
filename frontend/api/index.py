@@ -5,13 +5,17 @@ from datetime import datetime, timezone
 from pathlib import Path
 from typing import Dict, List
 
-from fastapi import FastAPI, HTTPException, Path as PathParam
+from fastapi import APIRouter, FastAPI, HTTPException, Path as PathParam
 from fastapi.middleware.cors import CORSMiddleware
 from pydantic import ValidationError
 
 from .schemas import Task, TaskCreate, TaskReorder, TaskUpdate
 
+default_prefix = "/api" if not os.environ.get("VERCEL") else ""
+route_prefix = os.environ.get("TASKS_API_PREFIX", default_prefix)
+
 app = FastAPI(title="Task Manager API")
+router = APIRouter(prefix=route_prefix)
 
 app.add_middleware(
     CORSMiddleware,
@@ -133,7 +137,7 @@ def startup_event() -> None:
     _load_state()
 
 
-@app.get("/api/tasks/", response_model=list[Task])
+@router.get("/tasks/", response_model=list[Task])
 def list_tasks() -> list[Task]:
     ordered_tasks = [_tasks[task_id] for task_id in _order if task_id in _tasks]
 
@@ -144,7 +148,7 @@ def list_tasks() -> list[Task]:
     return ordered_tasks
 
 
-@app.post("/api/tasks/", response_model=Task, status_code=201)
+@router.post("/tasks/", response_model=Task, status_code=201)
 def create_task(payload: TaskCreate) -> Task:
     task_id = _next_id()
     now = datetime.now(timezone.utc)
@@ -169,7 +173,7 @@ def create_task(payload: TaskCreate) -> Task:
     return task
 
 
-@app.patch("/api/tasks/{task_id}", response_model=Task)
+@router.patch("/tasks/{task_id}", response_model=Task)
 def update_task(
     payload: TaskUpdate,
     task_id: int = PathParam(..., ge=1),
@@ -195,7 +199,7 @@ def update_task(
     return updated
 
 
-@app.delete("/api/tasks/{task_id}", status_code=204)
+@router.delete("/tasks/{task_id}", status_code=204)
 def delete_task(task_id: int = PathParam(..., ge=1)) -> None:
     if task_id not in _tasks:
         raise HTTPException(status_code=404, detail="Task not found")
@@ -213,7 +217,7 @@ def delete_task(task_id: int = PathParam(..., ge=1)) -> None:
         raise
 
 
-@app.post("/api/tasks/reorder", status_code=204)
+@router.post("/tasks/reorder", status_code=204)
 def reorder_tasks(payload: TaskReorder) -> None:
     ids = payload.ids
 
@@ -237,3 +241,4 @@ def reorder_tasks(payload: TaskReorder) -> None:
 # Ensure state is loaded when the module is imported.
 _ensure_seed_file()
 _load_state()
+app.include_router(router)
