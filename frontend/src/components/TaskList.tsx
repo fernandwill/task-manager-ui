@@ -1,4 +1,5 @@
 import { useEffect, useMemo, useState } from 'react';
+import dayjs from 'dayjs';
 import {
   Box,
   Button,
@@ -26,6 +27,8 @@ import {
 import { CSS } from '@dnd-kit/utilities';
 import type { DragEndEvent } from '@dnd-kit/core';
 import type { Task } from '../store/tasksStore';
+
+const TIMESTAMP_FORMAT = 'MMM D, YYYY h:mm A';
 
 interface TaskListProps {
   tasks: Task[];
@@ -58,6 +61,22 @@ const TaskList = ({
   const mutedIcon = isLight
     ? 'rgba(17, 17, 24, 0.32)'
     : alpha(theme.palette.common.white, 0.48);
+  const [orderedTasks, setOrderedTasks] = useState(tasks);
+
+  useEffect(() => {
+    setOrderedTasks(tasks);
+  }, [tasks]);
+
+  const sensors = useSensors(
+    useSensor(PointerSensor, {
+      activationConstraint: { distance: 6 },
+    }),
+  );
+
+  const sortableItems = useMemo(
+    () => orderedTasks.map((task) => task.id.toString()),
+    [orderedTasks],
+  );
 
   if (!tasks.length) {
     const isInProgress = variant === 'inProgress';
@@ -87,18 +106,6 @@ const TaskList = ({
     );
   }
 
-  const [orderedTasks, setOrderedTasks] = useState(tasks);
-
-  useEffect(() => {
-    setOrderedTasks(tasks);
-  }, [tasks]);
-
-  const sensors = useSensors(
-    useSensor(PointerSensor, {
-      activationConstraint: { distance: 6 },
-    }),
-  );
-
   const handleDragEnd = (event: DragEndEvent) => {
     const { active, over } = event;
 
@@ -121,11 +128,6 @@ const TaskList = ({
     setOrderedTasks(newOrder);
     void onReorder(newOrder.map((task) => task.id));
   };
-
-  const sortableItems = useMemo(
-    () => orderedTasks.map((task) => task.id.toString()),
-    [orderedTasks],
-  );
 
   return (
     <DndContext sensors={sensors} onDragEnd={handleDragEnd}>
@@ -186,6 +188,10 @@ const SortableTaskCard = ({
 }: SortableTaskCardProps) => {
   const theme = useTheme();
   const isLight = theme.palette.mode === 'light';
+  const formattedCreated = dayjs(task.created_at).format(TIMESTAMP_FORMAT);
+  const formattedCompleted = task.completed_at
+    ? dayjs(task.completed_at).format(TIMESTAMP_FORMAT)
+    : 'Pending';
   const {
     attributes,
     listeners,
@@ -250,6 +256,14 @@ const SortableTaskCard = ({
             {task.description}
           </Typography>
         ) : null}
+        <Stack spacing={0.25}>
+          <Typography variant="caption" color="text.secondary">
+            Created: {formattedCreated}
+          </Typography>
+          <Typography variant="caption" color="text.secondary">
+            Completed: {formattedCompleted}
+          </Typography>
+        </Stack>
       </Stack>
 
       <Box sx={{ flexGrow: 1 }} />

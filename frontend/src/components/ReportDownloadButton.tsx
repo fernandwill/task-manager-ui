@@ -9,6 +9,8 @@ interface ReportDownloadButtonProps {
   tasks: Task[];
 }
 
+const TIMESTAMP_FORMAT = 'MMM D, YYYY h:mm A';
+
 const ReportDownloadButton = ({ tasks }: ReportDownloadButtonProps) => {
   const [isGenerating, setIsGenerating] = useState(false);
 
@@ -37,6 +39,15 @@ const ReportDownloadButton = ({ tasks }: ReportDownloadButtonProps) => {
                 ) : null}
                 <Text style={{ marginTop: 4 }}>
                   Status: {task.completed ? 'Completed' : 'Pending'}
+                </Text>
+                <Text>
+                  Created: {dayjs(task.created_at).format(TIMESTAMP_FORMAT)}
+                </Text>
+                <Text>
+                  Completed:{' '}
+                  {task.completed_at
+                    ? dayjs(task.completed_at).format(TIMESTAMP_FORMAT)
+                    : 'Pending'}
                 </Text>
               </View>
             ))}
