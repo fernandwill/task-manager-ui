@@ -249,9 +249,11 @@ const SortableTaskCard = ({
           {task.title}
         </Typography>
         <Stack spacing={0.25}>
-          <Typography variant="caption" color="text.secondary">
-            Created on {formattedCreated}
-          </Typography>
+          {variant !== 'completed' ? (
+            <Typography variant="caption" color="text.secondary">
+              Created on {formattedCreated}
+            </Typography>
+          ) : null}
           {formattedCompleted ? (
             <Stack direction="row" spacing={0.5} alignItems="center">
               <CheckCircleIcon
