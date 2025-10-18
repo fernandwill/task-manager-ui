@@ -1,7 +1,5 @@
-import json
 import logging
 from datetime import datetime, timezone
-from pathlib import Path as FilePath
 from typing import Dict, List
 
 from fastapi import FastAPI, HTTPException, Path
@@ -9,6 +7,7 @@ from fastapi.middleware.cors import CORSMiddleware
 from pydantic import ValidationError
 
 from .schemas import Task, TaskCreate, TaskReorder, TaskUpdate
+from .storage import TaskStorage, TaskStorageError, create_storage
 
 app = FastAPI(title="Task Manager API")
 
@@ -24,7 +23,7 @@ _tasks: Dict[int, Task] = {}
 _order: List[int] = []
 _counter = 0
 _logger = logging.getLogger(__name__)
-_data_file = FilePath(__file__).resolve().parent / "tasks.json"
+_storage: TaskStorage = create_storage()
 
 
 def _next_id() -> int:
@@ -34,7 +33,7 @@ def _next_id() -> int:
 
 
 def _persist_state() -> None:
-    """Persist the current task state to disk."""
+    """Persist the current task state to the configured storage backend."""
 
     data = {
         "tasks": [task.model_dump(mode="json") for task in _tasks.values()],
@@ -43,11 +42,9 @@ def _persist_state() -> None:
     }
 
     try:
-        _data_file.parent.mkdir(parents=True, exist_ok=True)
-        with _data_file.open("w", encoding="utf-8") as file:
-            json.dump(data, file, indent=2)
-    except Exception as exc:
-        _logger.exception("Failed to persist tasks to %s", _data_file)
+        _storage.save(data)
+    except TaskStorageError as exc:
+        _logger.exception("Failed to persist tasks using %s", type(_storage).__name__)
         raise HTTPException(
             status_code=500,
             detail="Unable to persist tasks. Please try again later.",
@@ -55,18 +52,19 @@ def _persist_state() -> None:
 
 
 def _load_state() -> None:
-    """Load persisted tasks from disk into memory."""
+    """Load persisted tasks from the configured storage backend."""
 
     global _tasks, _order, _counter
 
-    if not _data_file.exists():
+    try:
+        raw_data = _storage.load()
+    except TaskStorageError:
+        _logger.exception(
+            "Failed to load tasks using %s", type(_storage).__name__
+        )
         return
 
-    try:
-        with _data_file.open("r", encoding="utf-8") as file:
-            raw_data = json.load(file)
-    except (OSError, json.JSONDecodeError):
-        _logger.exception("Failed to load tasks from %s", _data_file)
+    if not raw_data:
         return
 
     tasks_data = raw_data.get("tasks", [])

@@ -12,6 +12,7 @@ if str(BACKEND_ROOT) not in sys.path:
   sys.path.insert(0, str(BACKEND_ROOT))
 
 from app import main
+from app import storage as storage_module
 
 
 @pytest.fixture(autouse=True)
@@ -19,7 +20,7 @@ def reset_state(tmp_path, monkeypatch):
   """Reset the in-memory and on-disk state before each test."""
 
   data_file = tmp_path / "tasks.json"
-  monkeypatch.setattr(main, "_data_file", data_file)
+  monkeypatch.setattr(main, "_storage", storage_module.FileTaskStorage(path=data_file))
   main._tasks = {}
   main._order = []
   main._counter = 0
