@@ -2,7 +2,6 @@ import { useEffect, useMemo, useState } from 'react';
 import {
   Box,
   Button,
-  Chip,
   IconButton,
   Paper,
   Stack,
@@ -11,7 +10,6 @@ import {
   useTheme,
 } from '@mui/material';
 import AssignmentTurnedInIcon from '@mui/icons-material/AssignmentTurnedIn';
-import CheckCircleIcon from '@mui/icons-material/CheckCircle';
 import DeleteIcon from '@mui/icons-material/Delete';
 import EditIcon from '@mui/icons-material/Edit';
 import {
@@ -252,42 +250,29 @@ const SortableTaskCard = ({
       <Box sx={{ flexGrow: 1 }} />
 
       <Stack direction="row" justifyContent="space-between" alignItems="center">
-        {variant === 'inProgress' ? (
-          <Button
-            size="small"
-            variant="outlined"
-            onClick={() => onToggle(task.id)}
-            aria-label={`Mark ${task.title} as done`}
-            sx={{
-              borderColor: alpha(theme.palette.primary.main, 0.35),
-              color: theme.palette.text.primary,
-              '&:hover': {
-                borderColor: theme.palette.primary.main,
-                backgroundColor: alpha(
-                  theme.palette.primary.main,
-                  isLight ? 0.08 : 0.16,
-                ),
-              },
-            }}
-          >
-            Mark as Done
-          </Button>
-        ) : (
-          <Chip
-            size="small"
-            label="COMPLETED"
-            icon={<CheckCircleIcon fontSize="small" />}
-            sx={{
-              borderColor: alpha(theme.palette.success.main, 0.2),
-              color: theme.palette.success.main,
-              backgroundColor: alpha(theme.palette.success.main, 0.12),
-              '& .MuiChip-icon': {
-                color: theme.palette.success.main,
-              },
-            }}
-            variant="outlined"
-          />
-        )}
+        <Button
+          size="small"
+          variant="outlined"
+          onClick={() => onToggle(task.id)}
+          aria-label={
+            variant === 'completed'
+              ? `Mark ${task.title} as in progress`
+              : `Mark ${task.title} as done`
+          }
+          sx={{
+            borderColor: alpha(theme.palette.primary.main, 0.35),
+            color: theme.palette.text.primary,
+            '&:hover': {
+              borderColor: theme.palette.primary.main,
+              backgroundColor: alpha(
+                theme.palette.primary.main,
+                isLight ? 0.08 : 0.16,
+              ),
+            },
+          }}
+        >
+          {variant === 'completed' ? 'Mark as In Progress' : 'Mark as Done'}
+        </Button>
         <Stack direction="row" spacing={1}>
           <IconButton
             edge="end"
