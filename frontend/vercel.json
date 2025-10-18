@@ -4,7 +4,7 @@
   "framework": "vite",
   "functions": {
     "api/**/*": {
-      "runtime": "python3.9"
+      "runtime": "nodejs18.x"
     }
   },
   "rewrites": [
