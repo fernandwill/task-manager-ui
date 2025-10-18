@@ -81,7 +81,7 @@ interface TasksState {
 type SetState = StoreApi<TasksState>['setState'];
 
 const startRequest = (set: SetState) => {
-  set({ isLoading: true, error: null, successMessage: null });
+  set({ isLoading: true, error: null });
 };
 
 const markStoreOnline = (
@@ -179,8 +179,8 @@ export const useTasksStore = create<TasksState>((set, get) => ({
       );
       markStoreOnline(set, (state) => ({
         tasks: [...state.tasks, data],
-        successMessage: 'Task created successfully.',
       }));
+      set({ successMessage: 'Task created successfully.' });
     } catch (err) {
       handleRequestError(set, err, {
         nonNetworkMessage: TASK_CREATE_FAILURE_TOAST_MESSAGE,
