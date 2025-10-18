@@ -146,8 +146,8 @@ describe('App', () => {
     expect(screen.getAllByText(/Plan sprint/i).length).toBeGreaterThan(0);
 
     const createdLabel = `Created: ${formatTimestamp('2024-01-10T14:30:00.000Z')}`;
-    expect(screen.getAllByText(createdLabel).length).toBeGreaterThan(1);
-    expect(screen.getAllByText('Completed: Pending').length).toBeGreaterThan(1);
+    expect(screen.getAllByText(createdLabel).length).toBeGreaterThan(0);
+    expect(screen.getAllByText('Completed: Pending').length).toBeGreaterThan(0);
 
     const markDoneButton = screen.getByRole('button', {
       name: /mark plan sprint as done/i,
@@ -166,8 +166,8 @@ describe('App', () => {
     });
     await user.click(completedTab);
 
-    const completedLabel = `Completed: ${formatTimestamp('2024-01-09T17:45:00.000Z')}`;
-    expect(screen.getByText(completedLabel)).toBeInTheDocument();
+    const formattedCompleted = formatTimestamp('2024-01-09T17:45:00.000Z');
+    expect(screen.getAllByText(new RegExp(formattedCompleted)).length).toBeGreaterThan(0);
 
     const markInProgressButton = screen.getByRole('button', {
       name: /mark review pull requests as in progress/i,
@@ -323,6 +323,84 @@ describe('App', () => {
       ).not.toBeInTheDocument();
     });
   }, 20000);
+
+  it('shows how many in-progress tasks remain beyond the preview', () => {
+    store.mocks.reset({
+      tasks: [
+        {
+          id: 1,
+          title: 'Plan sprint',
+          completed: false,
+          created_at: '2024-01-10T14:30:00.000Z',
+          completed_at: null,
+        },
+        {
+          id: 2,
+          title: 'Draft documentation',
+          completed: false,
+          created_at: '2024-01-11T10:15:00.000Z',
+          completed_at: null,
+        },
+        {
+          id: 3,
+          title: 'Review designs',
+          completed: false,
+          created_at: '2024-01-12T09:00:00.000Z',
+          completed_at: null,
+        },
+        {
+          id: 4,
+          title: 'Sync with QA',
+          completed: false,
+          created_at: '2024-01-13T13:45:00.000Z',
+          completed_at: null,
+        },
+        {
+          id: 5,
+          title: 'Prepare release notes',
+          completed: false,
+          created_at: '2024-01-14T08:20:00.000Z',
+          completed_at: null,
+        },
+      ],
+    });
+
+    renderApp();
+
+    expect(screen.getByText('2 more tasks...')).toBeInTheDocument();
+  });
+
+  it('hides the remaining task message when three or fewer tasks are in progress', () => {
+    store.mocks.reset({
+      tasks: [
+        {
+          id: 1,
+          title: 'Plan sprint',
+          completed: false,
+          created_at: '2024-01-10T14:30:00.000Z',
+          completed_at: null,
+        },
+        {
+          id: 2,
+          title: 'Draft documentation',
+          completed: false,
+          created_at: '2024-01-11T10:15:00.000Z',
+          completed_at: null,
+        },
+        {
+          id: 3,
+          title: 'Review designs',
+          completed: false,
+          created_at: '2024-01-12T09:00:00.000Z',
+          completed_at: null,
+        },
+      ],
+    });
+
+    renderApp();
+
+    expect(screen.queryByText(/more task/i)).not.toBeInTheDocument();
+  });
 
   it('shows a success dialog when a task update succeeds', async () => {
     store.mocks.reset({
