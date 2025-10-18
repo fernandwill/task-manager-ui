@@ -108,6 +108,7 @@ const storeMocks = vi.hoisted(() => {
     toggleTaskCompletionMock,
     deleteTaskMock,
     updateTaskMock,
+    clearSuccessMessageMock,
     reorderTasksMock,
     clearNetworkMessageMock,
     reset,
@@ -297,6 +298,88 @@ describe('App', () => {
         screen.getByText(/Task created successfully\./i),
       ).toBeInTheDocument();
     });
+  });
+
+  it('toggles the success toast visibility around task creation', async () => {
+    const user = userEvent.setup();
+
+    store.mocks.reset({ tasks: [] });
+
+    const renderResult = renderApp();
+
+    store.mocks.createTaskMock
+      .mockImplementationOnce(async () => {
+        store.mocks.reset({
+          tasks: [],
+          successMessage: 'Task created successfully.',
+        });
+
+        renderResult.rerender(
+          <AppThemeProvider>
+            <App />
+          </AppThemeProvider>,
+        );
+      })
+      .mockImplementationOnce(async () => {
+        store.mocks.reset({
+          tasks: [],
+          successMessage: 'Task created successfully.',
+        });
+
+        renderResult.rerender(
+          <AppThemeProvider>
+            <App />
+          </AppThemeProvider>,
+        );
+      });
+
+    store.mocks.clearSuccessMessageMock.mockImplementationOnce(() => {
+      store.mocks.reset({
+        tasks: [],
+        successMessage: null,
+      });
+
+      renderResult.rerender(
+        <AppThemeProvider>
+          <App />
+        </AppThemeProvider>,
+      );
+    });
+
+    expect(store.mocks.getState().successMessage).toBeNull();
+
+    await user.type(screen.getByLabelText(/Task title/i), 'Ship UI');
+    await user.click(screen.getByRole('button', { name: /^Create Task$/i }));
+
+    await waitFor(() =>
+      expect(
+        screen.getByText(/Task created successfully\./i),
+      ).toBeInTheDocument(),
+    );
+
+    expect(store.mocks.getState().successMessage).toBe(
+      'Task created successfully.',
+    );
+
+    await user.click(screen.getByRole('button', { name: /Close/i }));
+
+    await waitFor(() =>
+      expect(
+        screen.queryByText(/Task created successfully\./i),
+      ).not.toBeInTheDocument(),
+    );
+
+    expect(store.mocks.clearSuccessMessageMock).toHaveBeenCalledTimes(1);
+    expect(store.mocks.getState().successMessage).toBeNull();
+
+    await user.type(screen.getByLabelText(/Task title/i), 'Sync backend');
+    await user.click(screen.getByRole('button', { name: /^Create Task$/i }));
+
+    await waitFor(() =>
+      expect(
+        screen.getByText(/Task created successfully\./i),
+      ).toBeInTheDocument(),
+    );
   });
 
   it('shows an error toast when task creation fails', async () => {
