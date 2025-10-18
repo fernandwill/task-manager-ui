@@ -279,7 +279,7 @@ describe('App', () => {
     store.mocks.createTaskMock.mockImplementation(async () => {
       store.mocks.reset({
         tasks: [],
-        successMessage: 'Task created successfully.',
+        successMessage: 'Task created.',
       });
 
       renderResult.rerender(
@@ -294,9 +294,7 @@ describe('App', () => {
     await user.click(screen.getByRole('button', { name: /Create Task/i }));
 
     await waitFor(() => {
-      expect(
-        screen.getByText(/Task created successfully\./i),
-      ).toBeInTheDocument();
+      expect(screen.getByText(/Task created\./i)).toBeInTheDocument();
     });
   });
 
@@ -311,7 +309,7 @@ describe('App', () => {
       .mockImplementationOnce(async () => {
         store.mocks.reset({
           tasks: [],
-          successMessage: 'Task created successfully.',
+          successMessage: 'Task created.',
         });
 
         renderResult.rerender(
@@ -323,7 +321,7 @@ describe('App', () => {
       .mockImplementationOnce(async () => {
         store.mocks.reset({
           tasks: [],
-          successMessage: 'Task created successfully.',
+          successMessage: 'Task created.',
         });
 
         renderResult.rerender(
@@ -352,21 +350,15 @@ describe('App', () => {
     await user.click(screen.getByRole('button', { name: /^Create Task$/i }));
 
     await waitFor(() =>
-      expect(
-        screen.getByText(/Task created successfully\./i),
-      ).toBeInTheDocument(),
+      expect(screen.getByText(/Task created\./i)).toBeInTheDocument(),
     );
 
-    expect(store.mocks.getState().successMessage).toBe(
-      'Task created successfully.',
-    );
+    expect(store.mocks.getState().successMessage).toBe('Task created.');
 
     await user.click(screen.getByRole('button', { name: /Close/i }));
 
     await waitFor(() =>
-      expect(
-        screen.queryByText(/Task created successfully\./i),
-      ).not.toBeInTheDocument(),
+      expect(screen.queryByText(/Task created\./i)).not.toBeInTheDocument(),
     );
 
     expect(store.mocks.clearSuccessMessageMock).toHaveBeenCalledTimes(1);
@@ -376,9 +368,7 @@ describe('App', () => {
     await user.click(screen.getByRole('button', { name: /^Create Task$/i }));
 
     await waitFor(() =>
-      expect(
-        screen.getByText(/Task created successfully\./i),
-      ).toBeInTheDocument(),
+      expect(screen.getByText(/Task created\./i)).toBeInTheDocument(),
     );
   });
 
@@ -643,15 +633,13 @@ describe('App', () => {
 
   it('shows a success dialog when a task update succeeds', async () => {
     store.mocks.reset({
-      successMessage: 'Task updated successfully.',
+      successMessage: 'Task updated.',
     });
 
     renderApp();
 
     await waitFor(() => {
-      expect(
-        screen.getByText(/Task updated successfully\./i),
-      ).toBeInTheDocument();
+      expect(screen.getByText(/Task updated\./i)).toBeInTheDocument();
     });
   });
 });

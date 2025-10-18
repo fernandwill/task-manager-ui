@@ -180,7 +180,7 @@ export const useTasksStore = create<TasksState>((set, get) => ({
       markStoreOnline(set, (state) => ({
         tasks: [data, ...state.tasks],
       }));
-      set({ successMessage: 'Task created successfully.' });
+      set({ successMessage: 'Task created.' });
     } catch (err) {
       handleRequestError(set, err, {
         nonNetworkMessage: TASK_CREATE_FAILURE_TOAST_MESSAGE,
@@ -224,7 +224,7 @@ export const useTasksStore = create<TasksState>((set, get) => ({
       await apiClient.delete(`${TASKS_ENDPOINT}/${taskId}`);
       markStoreOnline(set, (state) => ({
         tasks: state.tasks.filter((task) => task.id !== taskId),
-        successMessage: 'Task deleted successfully.',
+        successMessage: 'Task deleted.',
       }));
       return true;
     } catch (err) {
@@ -248,7 +248,7 @@ export const useTasksStore = create<TasksState>((set, get) => ({
         tasks: state.tasks.map((current) =>
           current.id === taskId ? data : current,
         ),
-        successMessage: 'Task updated successfully.',
+        successMessage: 'Task updated.',
       }));
       return true;
     } catch (err) {
