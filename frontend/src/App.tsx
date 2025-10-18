@@ -24,7 +24,6 @@ import {
 } from '@mui/material';
 import DarkModeOutlinedIcon from '@mui/icons-material/DarkModeOutlined';
 import LightbulbOutlinedIcon from '@mui/icons-material/LightbulbOutlined';
-import CheckCircleOutlineIcon from '@mui/icons-material/CheckCircleOutline';
 import { useEffect, useMemo, useState } from 'react';
 import type { SyntheticEvent } from 'react';
 import ReportDownloadButton from './components/ReportDownloadButton';
@@ -34,6 +33,7 @@ import { useTasksStore } from './store/tasksStore';
 import { useColorMode } from './theme/AppThemeProvider';
 import type { Task } from './store/tasksStore';
 import EditTaskDialog from './components/EditTaskDialog';
+import SuccessToast from './components/SuccessToast';
 
 const App = () => {
   const theme = useTheme();
@@ -55,37 +55,24 @@ const App = () => {
   const reorderTasks = useTasksStore((state) => state.reorderTasks);
   const [taskToDelete, setTaskToDelete] = useState<Task | null>(null);
   const [taskToEdit, setTaskToEdit] = useState<Task | null>(null);
-  const [isEditSuccessOpen, setIsEditSuccessOpen] = useState(false);
 
   useEffect(() => {
     void fetchTasks();
   }, [fetchTasks]);
 
   useEffect(() => {
-    if (!successMessage || successMessage === 'Task updated successfully.') {
+    if (!successMessage) {
       return;
     }
 
     const timeout = window.setTimeout(() => {
       clearSuccessMessage();
-    }, 4000);
+    }, 3000);
 
     return () => {
       window.clearTimeout(timeout);
     };
   }, [successMessage, clearSuccessMessage]);
-
-  useEffect(() => {
-    if (successMessage === 'Task updated successfully.') {
-      setIsEditSuccessOpen(true);
-    }
-  }, [successMessage]);
-
-  useEffect(() => {
-    if (!successMessage) {
-      setIsEditSuccessOpen(false);
-    }
-  }, [successMessage]);
 
   const handleDeleteRequest = (taskId: number) => {
     const task = tasks.find((item) => item.id === taskId) ?? null;
@@ -120,11 +107,6 @@ const App = () => {
     if (wasUpdated) {
       setTaskToEdit(null);
     }
-  };
-
-  const handleCloseEditSuccess = () => {
-    setIsEditSuccessOpen(false);
-    clearSuccessMessage();
   };
 
   const stats = useMemo(() => {
@@ -457,19 +439,11 @@ const App = () => {
             </Paper>
           </Box>
 
-          <Stack spacing={2}>
-            {successMessage &&
-            successMessage !== 'Task updated successfully.' ? (
-              <Alert
-                severity="success"
-                onClose={clearSuccessMessage}
-                data-testid="success-alert"
-              >
-                {successMessage}
-              </Alert>
-            ) : null}
-            {error ? <Alert severity="error">{error}</Alert> : null}
-          </Stack>
+          {error ? (
+            <Stack spacing={2}>
+              <Alert severity="error">{error}</Alert>
+            </Stack>
+          ) : null}
 
           <Paper
             elevation={0}
@@ -591,26 +565,11 @@ const App = () => {
         isSubmitting={isLoading}
       />
 
-      <Dialog
-        open={isEditSuccessOpen}
-        onClose={handleCloseEditSuccess}
-        aria-labelledby="edit-task-success-title"
-      >
-        <DialogTitle id="edit-task-success-title">Task updated</DialogTitle>
-        <DialogContent>
-          <Stack direction="row" spacing={2} alignItems="center" mt={1}>
-            <CheckCircleOutlineIcon color="success" />
-            <Typography>
-              {successMessage ?? 'Task updated successfully.'}
-            </Typography>
-          </Stack>
-        </DialogContent>
-        <DialogActions>
-          <Button onClick={handleCloseEditSuccess} autoFocus>
-            Close
-          </Button>
-        </DialogActions>
-      </Dialog>
+      <SuccessToast
+        open={Boolean(successMessage)}
+        message={successMessage ?? ''}
+        onClose={clearSuccessMessage}
+      />
     </Box>
   );
 };
