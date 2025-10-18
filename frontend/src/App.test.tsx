@@ -145,9 +145,9 @@ describe('App', () => {
     expect(store.mocks.fetchTasksMock).toHaveBeenCalledTimes(1);
     expect(screen.getAllByText(/Plan sprint/i).length).toBeGreaterThan(0);
 
-    const createdLabel = `Created: ${formatTimestamp('2024-01-10T14:30:00.000Z')}`;
-    expect(screen.getAllByText(createdLabel).length).toBeGreaterThan(0);
-    expect(screen.getAllByText('Completed: Pending').length).toBeGreaterThan(0);
+    expect(screen.getByText(/Outline deliverables for next release/i)).toBeInTheDocument();
+    expect(screen.queryByText(/Created:/i)).toBeNull();
+    expect(screen.queryByText(/Completed:/i)).toBeNull();
 
     const markDoneButton = screen.getByRole('button', {
       name: /mark plan sprint as done/i,
@@ -167,7 +167,9 @@ describe('App', () => {
     await user.click(completedTab);
 
     const formattedCompleted = formatTimestamp('2024-01-09T17:45:00.000Z');
-    expect(screen.getAllByText(new RegExp(formattedCompleted)).length).toBeGreaterThan(0);
+    expect(
+      screen.getAllByText(new RegExp(`Completed on ${formattedCompleted}`)),
+    ).toHaveLength(1);
 
     const markInProgressButton = screen.getByRole('button', {
       name: /mark review pull requests as in progress/i,

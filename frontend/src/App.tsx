@@ -26,7 +26,6 @@ import DarkModeOutlinedIcon from '@mui/icons-material/DarkModeOutlined';
 import LightbulbOutlinedIcon from '@mui/icons-material/LightbulbOutlined';
 import CheckCircleOutlineIcon from '@mui/icons-material/CheckCircleOutline';
 import { useEffect, useMemo, useState } from 'react';
-import dayjs from 'dayjs';
 import type { SyntheticEvent } from 'react';
 import ReportDownloadButton from './components/ReportDownloadButton';
 import TaskForm from './components/TaskForm';
@@ -180,9 +179,6 @@ const App = () => {
   const gradientAmbient = isLight
     ? alpha(theme.palette.text.primary, 0.03)
     : alpha(theme.palette.common.white, 0.04);
-  const formatTimestamp = (timestamp: string) =>
-    dayjs(timestamp).format('MMM D, YYYY h:mm A');
-
   return (
     <Box
       sx={{
@@ -394,32 +390,15 @@ const App = () => {
                                     </Typography>
                                   }
                                   secondary={
-                                    <Stack spacing={0.25}>
-                                      {task.description ? (
-                                        <Typography
-                                          variant="caption"
-                                          color="text.secondary"
-                                          noWrap
-                                        >
-                                          {task.description}
-                                        </Typography>
-                                      ) : null}
+                                    task.description ? (
                                       <Typography
                                         variant="caption"
                                         color="text.secondary"
+                                        noWrap
                                       >
-                                        Created: {formatTimestamp(task.created_at)}
+                                        {task.description}
                                       </Typography>
-                                      <Typography
-                                        variant="caption"
-                                        color="text.secondary"
-                                      >
-                                        Completed:{' '}
-                                        {task.completed_at
-                                          ? formatTimestamp(task.completed_at)
-                                          : 'Pending'}
-                                      </Typography>
-                                    </Stack>
+                                    ) : null
                                   }
                                   secondaryTypographyProps={{ component: 'div' }}
                                   sx={{ m: 0 }}
