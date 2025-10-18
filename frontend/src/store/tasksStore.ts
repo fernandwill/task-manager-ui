@@ -178,7 +178,7 @@ export const useTasksStore = create<TasksState>((set, get) => ({
         payload,
       );
       markStoreOnline(set, (state) => ({
-        tasks: [...state.tasks, data],
+        tasks: [data, ...state.tasks],
       }));
       set({ successMessage: 'Task created successfully.' });
     } catch (err) {
