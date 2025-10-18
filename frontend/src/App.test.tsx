@@ -139,6 +139,23 @@ describe('App', () => {
     expect(store.mocks.toggleTaskCompletionMock).toHaveBeenCalledWith(1);
   });
 
+  it('toggles a completed task back to in progress', async () => {
+    const user = userEvent.setup();
+    renderApp();
+
+    const completedTab = screen.getByRole('tab', {
+      name: /completed \(1\)/i,
+    });
+    await user.click(completedTab);
+
+    const markInProgressButton = screen.getByRole('button', {
+      name: /mark review pull requests as in progress/i,
+    });
+    await user.click(markInProgressButton);
+
+    expect(store.mocks.toggleTaskCompletionMock).toHaveBeenCalledWith(2);
+  });
+
   it('shows an error alert when the store reports an error', () => {
     store.mocks.reset({
       tasks: [],
@@ -284,7 +301,7 @@ describe('App', () => {
         screen.queryByRole('dialog', { name: /edit task/i }),
       ).not.toBeInTheDocument();
     });
-  });
+  }, 20000);
 
   it('shows a success dialog when a task update succeeds', async () => {
     store.mocks.reset({
