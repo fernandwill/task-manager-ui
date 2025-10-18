@@ -237,11 +237,16 @@ const SortableTaskCard = ({
           variant="subtitle1"
           fontWeight={600}
           color={variant === 'completed' ? 'text.secondary' : 'text.primary'}
+          sx={{ overflowWrap: 'anywhere' }}
         >
           {task.title}
         </Typography>
         {task.description ? (
-          <Typography variant="body2" color="text.secondary">
+          <Typography
+            variant="body2"
+            color="text.secondary"
+            sx={{ overflowWrap: 'anywhere' }}
+          >
             {task.description}
           </Typography>
         ) : null}
