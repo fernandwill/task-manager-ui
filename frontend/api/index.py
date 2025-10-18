@@ -5,7 +5,7 @@ from datetime import datetime, timezone
 from pathlib import Path
 from typing import Dict, List
 
-from fastapi import APIRouter, FastAPI, HTTPException, Path as PathParam
+from fastapi import APIRouter, FastAPI, HTTPException, Path as PathParam, Request
 from fastapi.middleware.cors import CORSMiddleware
 from pydantic import ValidationError
 
@@ -16,6 +16,11 @@ route_prefix = os.environ.get("TASKS_API_PREFIX", default_prefix)
 
 app = FastAPI(title="Task Manager API")
 router = APIRouter(prefix=route_prefix)
+
+logger = logging.getLogger("task_manager.api")
+if not logger.handlers:
+    logging.basicConfig(level=logging.INFO)
+logger.info("Starting Task Manager API with route prefix '%s'", route_prefix)
 
 app.add_middleware(
     CORSMiddleware,
@@ -133,6 +138,7 @@ def _load_state() -> None:
 
 @app.on_event("startup")
 def startup_event() -> None:
+    logger.info("Startup event triggered. Loading task state from %s", _data_file)
     _ensure_seed_file()
     _load_state()
 
@@ -242,3 +248,22 @@ def reorder_tasks(payload: TaskReorder) -> None:
 _ensure_seed_file()
 _load_state()
 app.include_router(router)
+
+
+@app.middleware("http")
+async def log_requests(request: Request, call_next):
+    logger.info(
+        "Incoming request: %s %s (root_path=%s, url=%s)",
+        request.method,
+        request.url.path,
+        request.scope.get("root_path"),
+        str(request.url),
+    )
+    response = await call_next(request)
+    logger.info(
+        "Completed request: %s %s -> %s",
+        request.method,
+        request.url.path,
+        response.status_code,
+    )
+    return response
