@@ -41,7 +41,7 @@ The development server runs on `http://localhost:5173` and proxies API requests 
 ## Deploying to Vercel
 - Point the Vercel project root to the `frontend` directory.
 - Do not define `VITE_API_BASE_URL` in the Vercel environment variables (or explicitly set it to `/api`) so the built client targets the serverless function.
-- Deploy as usual. The build produces the static Vite assets and the Python Serverless Function at `api/index.py`, which runs on the Python 3.11 runtime and keeps transient state in `/tmp` between warm invocations.
+- Deploy as usual. The build produces the static Vite assets and the Python Serverless Function at `api/index.py`, which runs on the Python 3.9 runtime (via `@vercel/python@3.9`) and keeps transient state in `/tmp` between warm invocations.
 
 ## Available API Endpoints
 | Method | Path | Description |
