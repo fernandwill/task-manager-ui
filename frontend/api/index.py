@@ -11,8 +11,7 @@ from pydantic import ValidationError
 
 from .schemas import Task, TaskCreate, TaskReorder, TaskUpdate
 
-default_prefix = "/api" if not os.environ.get("VERCEL") else ""
-route_prefix = os.environ.get("TASKS_API_PREFIX", default_prefix)
+route_prefix = os.environ.get("TASKS_API_PREFIX", "/api")
 
 app = FastAPI(title="Task Manager API")
 router = APIRouter(prefix=route_prefix)
